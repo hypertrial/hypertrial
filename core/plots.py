@@ -5,40 +5,51 @@ import numpy as np
 import pandas as pd
 from core.config import BACKTEST_START, BACKTEST_END, MIN_WEIGHT, REBALANCE_WINDOW
 
-def plot_price_vs_ma200(df_features, weights=None):
-    df_plot = df_features.loc[BACKTEST_START:BACKTEST_END].copy()
+def plot_price_vs_lookback_avg(df, weights=None):
+    """
+    Plot BTC price vs a lookback moving average with optional weight heatmap
     
-    # Ensure ma200 exists in the dataframe
-    if 'ma200' not in df_plot.columns:
-        df_plot['ma200'] = df_plot['btc_close'].rolling(window=200, min_periods=1).mean()
-
-    plt.figure(figsize=(12, 5))
-    plt.plot(df_plot.index, df_plot['btc_close'], label='BTC Price', alpha=0.6)
-    plt.plot(df_plot.index, df_plot['ma200'], label='200-day MA', alpha=0.9)
-    plt.fill_between(
-        df_plot.index,
-        df_plot['btc_close'],
-        df_plot['ma200'],
-        where=(df_plot['btc_close'] < df_plot['ma200']),
-        color='green',
-        alpha=0.1,
-        label='Signal (Price < MA200)'
-    )
-
+    Args:
+        df (pd.DataFrame): DataFrame with btc_close and moving average columns
+        weights (pd.Series, optional): Optional weights Series
+    """
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # Check if moving average column exists
+    if not any(col.startswith('ma') for col in df.columns):
+        raise ValueError("No moving average column (starting with 'ma') found in the dataframe. "
+                         "Make sure to use a strategy that calculates moving average features.")
+    
+    # Find the first moving average column (ma*)
+    ma_col = next((col for col in df.columns if col.startswith('ma')), None)
+    
+    # Plot price and moving average
+    ax.semilogy(df.index, df['btc_close'], label='BTC Price')
+    ax.semilogy(df.index, df[ma_col], label=f'{ma_col} (Moving Average)', alpha=0.8)
+    
+    # If weights are provided, use them for coloring
     if weights is not None:
-        signal_mask = df_plot['btc_close'] < df_plot['ma200']
-        uniform_dates = df_plot.index[~signal_mask]
-        plt.scatter(uniform_dates, df_plot.loc[~signal_mask, 'btc_close'],
-                    marker='o', edgecolors='blue', facecolors='none', label='Uniform Weight Marker', s=20)
-        dynamic_dates = df_plot.index[signal_mask]
-        plt.scatter(dynamic_dates, df_plot.loc[signal_mask, 'btc_close'],
-                    marker='o', color='red', label='Dynamic Weight Marker', s=20)
-
-    plt.title("BTC Close vs MA200 (With Weight Markers)")
-    plt.xlabel("Date")
-    plt.ylabel("Price")
-    plt.grid(True, linestyle="--", linewidth=0.5)
-    plt.legend()
+        # Normalize weights for visualization
+        norm_weights = (weights - weights.min()) / (weights.max() - weights.min())
+        
+        # Plot scatter with weight-based coloring
+        common_idx = df.index.intersection(norm_weights.index)
+        scatter = ax.scatter(
+            common_idx, 
+            df.loc[common_idx, 'btc_close'],
+            c=norm_weights.loc[common_idx],
+            cmap='viridis',
+            alpha=0.6,
+            s=30
+        )
+        plt.colorbar(scatter, label='Relative Weight')
+    
+    # Add labels and grid
+    ax.set_title('BTC Price vs Moving Average')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Price (USD, log scale)')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
 

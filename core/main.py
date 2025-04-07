@@ -3,7 +3,7 @@ import argparse
 import os
 import pandas as pd
 from core.data import load_data
-from core.plots import plot_price_vs_ma200, plot_final_weights, plot_weight_sums_by_cycle
+from core.plots import plot_price_vs_lookback_avg, plot_final_weights, plot_weight_sums_by_cycle
 from core.spd import backtest_dynamic_dca, list_available_strategies, compute_cycle_spd
 from core.strategies import load_strategies, get_strategy, list_strategies
 from core.config import BACKTEST_START
@@ -216,7 +216,7 @@ def main():
     
     # Find the strategy class from the registered modules
     strategy_class = None
-    for module_name in [f"core.strategies.{name}" for name in ["dynamic_dca", "uniform_dca"]]:
+    for module_name in [f"core.strategies.{name}" for name in list_strategies().keys()]:
         try:
             module = import_module(module_name)
             for name, obj in inspect.getmembers(module):
@@ -229,23 +229,27 @@ def main():
         except ImportError:
             continue
     
-    if not strategy_class:
-        # Fallback: use the registered function directly
-        # Basic preprocessing for plotting
-        df_features = btc_df.copy()
-        if 'ma200' not in df_features.columns:
-            df_features['ma200'] = df_features['btc_close'].rolling(window=200, min_periods=1).mean()
-        df_features = df_features.loc[BACKTEST_START:]
-    else:
-        # Use the class's construct_features method
+    # Prepare features for visualization
+    if strategy_class:
+        # Use the strategy class's construct_features method if available
         df_features = strategy_class.construct_features(btc_df).loc[BACKTEST_START:]
+    else:
+        # Generic preprocessing for basic plotting - no strategy-specific features
+        df_features = btc_df.copy().loc[BACKTEST_START:]
         
     # Compute weights using the strategy function
     weights = strategy_fn(btc_df)
 
     # Plot results only if not disabled
     if not args.no_plots:
-        plot_price_vs_ma200(df_features, weights=weights)
+        # Pass the full features dataframe to the plot functions
+        # Each plot function should extract only the features it needs
+        try:
+            plot_price_vs_lookback_avg(df_features, weights=weights)
+        except ValueError as e:
+            print(f"Warning: Could not plot price vs moving average: {str(e)}")
+            print("Only strategies that calculate moving average features can use this plot.")
+            
         plot_final_weights(weights)
         plot_weight_sums_by_cycle(weights)
     else:

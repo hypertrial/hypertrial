@@ -165,9 +165,9 @@ class TestStrategyPerformance:
             # Cache intermediate calculations
             if not hasattr(cached_strategy, 'cache') or cached_strategy.cache is None:
                 # Calculate moving average and standard deviation once
-                ma200 = df['btc_close'].rolling(window=200, min_periods=1).mean()
-                std200 = df['btc_close'].rolling(window=200, min_periods=1).std()
-                z_scores = (ma200 - df['btc_close']) / std200
+                lookback_avg = df['btc_close'].rolling(window=200, min_periods=1).mean()
+                lookback_std = df['btc_close'].rolling(window=200, min_periods=1).std()
+                z_scores = (lookback_avg - df['btc_close']) / lookback_std
                 weights = pd.Series(1.0, index=df.index)
                 
                 # Modify weights based on z-scores
@@ -184,9 +184,9 @@ class TestStrategyPerformance:
         # Create non-cached version
         def non_cached_strategy(df):
             # Recalculate each time
-            ma200 = df['btc_close'].rolling(window=200, min_periods=1).mean()
-            std200 = df['btc_close'].rolling(window=200, min_periods=1).std()
-            z_scores = (ma200 - df['btc_close']) / std200
+            lookback_avg = df['btc_close'].rolling(window=200, min_periods=1).mean()
+            lookback_std = df['btc_close'].rolling(window=200, min_periods=1).std()
+            z_scores = (lookback_avg - df['btc_close']) / lookback_std
             weights = pd.Series(1.0, index=df.index)
             
             # Modify weights based on z-scores
@@ -235,15 +235,15 @@ class TestStrategyPerformance:
     def _create_complex_strategy(df):
         """Create a more complex strategy for testing."""
         # Calculate multiple indicators
-        ma200 = df['btc_close'].rolling(window=200, min_periods=1).mean()
-        ma50 = df['btc_close'].rolling(window=50, min_periods=1).mean()
-        ma20 = df['btc_close'].rolling(window=20, min_periods=1).mean()
+        lookback_avg_200 = df['btc_close'].rolling(window=200, min_periods=1).mean()
+        lookback_avg_50 = df['btc_close'].rolling(window=50, min_periods=1).mean()
+        lookback_avg_20 = df['btc_close'].rolling(window=20, min_periods=1).mean()
         
-        std200 = df['btc_close'].rolling(window=200, min_periods=1).std()
+        lookback_std_200 = df['btc_close'].rolling(window=200, min_periods=1).std()
         
         # Create multiple z-scores
-        z_score_200 = (ma200 - df['btc_close']) / std200
-        z_score_cross = (ma50 - ma20) / std200
+        z_score_200 = (lookback_avg_200 - df['btc_close']) / lookback_std_200
+        z_score_cross = (lookback_avg_50 - lookback_avg_20) / lookback_std_200
         
         # Combine signals
         combined_signal = z_score_200 + 0.5 * z_score_cross
@@ -254,7 +254,7 @@ class TestStrategyPerformance:
         
         # Find positive divergence
         for i in range(20, len(df)):
-            if df['btc_close'].iloc[i] < df['btc_close'].iloc[i-20] and ma50.iloc[i] > ma50.iloc[i-20]:
+            if df['btc_close'].iloc[i] < df['btc_close'].iloc[i-20] and lookback_avg_50.iloc[i] > lookback_avg_50.iloc[i-20]:
                 weights.iloc[i] *= 1.5
         
         # Normalize
@@ -286,11 +286,14 @@ class TestStrategyPerformance:
     def _vectorized_strategy(df):
         """A vectorized implementation of a strategy."""
         # Calculate indicators using vectorized operations
-        ma200 = df['btc_close'].rolling(window=200, min_periods=1).mean()
-        std200 = df['btc_close'].rolling(window=200, min_periods=1).std()
+        window_size = 200
         
-        # Calculate z-scores
-        z_scores = (ma200 - df['btc_close']) / std200
+        # Use generic lookback window instead of specifically naming ma200
+        lookback_avg = df['btc_close'].rolling(window=window_size, min_periods=1).mean()
+        lookback_std = df['btc_close'].rolling(window=window_size, min_periods=1).std()
+        
+        # Calculate deviation metric
+        z_scores = (lookback_avg - df['btc_close']) / lookback_std
         
         # Apply weight modification
         weights = pd.Series(1.0, index=df.index)
@@ -309,17 +312,18 @@ class TestStrategyPerformance:
         weights = pd.Series(1.0, index=df.index)
         
         # Calculate indicators manually
-        ma200 = df['btc_close'].rolling(window=200, min_periods=1).mean()
-        std200 = df['btc_close'].rolling(window=200, min_periods=1).std()
+        window_size = 200
+        lookback_avg = df['btc_close'].rolling(window=window_size, min_periods=1).mean()
+        lookback_std = df['btc_close'].rolling(window=window_size, min_periods=1).std()
         
         # Apply weight modification iteratively
         for i in range(len(df)):
             price = df['btc_close'].iloc[i]
-            ma = ma200.iloc[i]
-            std = std200.iloc[i]
+            avg = lookback_avg.iloc[i]
+            std = lookback_std.iloc[i]
             
             if std > 0:
-                z_score = (ma - price) / std
+                z_score = (avg - price) / std
                 if z_score > 0:
                     weights.iloc[i] = weights.iloc[i] * (1.0 + z_score)
             
