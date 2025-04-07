@@ -1,43 +1,79 @@
-# Hypertrial
+# Hypertrial: Bitcoin Dollar-Cost Averaging (DCA) Backtest
 
-Data Preparation:
+A Python-based backtesting framework for evaluating Bitcoin DCA strategy performance across multiple market cycles.
 
-Import libraries and set global parameters (e.g. backtest dates, 4‐year cycles, budget).
+## Overview
 
-Load Bitcoin price data from the Coin Metrics API, format the dates, and rename the price column.
+Hypertrial implements and tests a threshold-based dynamic DCA strategy that outperforms traditional uniform DCA by strategically adjusting purchase weights based on price deviations from the 200-day moving average.
 
-Helper Functions & Metrics:
+The framework measures performance using Sats Per Dollar (SPD) across 4-year Bitcoin market cycles, allowing for objective comparison between different strategies.
 
-Define functions to determine cycle boundaries, generate cycle labels, and calculate key metrics:
+## Features
 
-Min/Max SPD: Sats per dollar for worst-case (cycle high) and best-case (cycle low) scenarios.
+- **Data Collection**: Automatically retrieves historical Bitcoin price data using CoinMetrics API
+- **Dynamic DCA Strategy**: Implements a 200-day MA threshold strategy with customizable parameters
+- **Performance Metrics**: Calculates and compares SPD for both uniform DCA and dynamic strategies
+- **Visualization**: Generates detailed plots showing strategy performance over time
+- **Cycle Analysis**: Groups results by Bitcoin's characteristic 4-year cycles
 
-Uniform SPD: Sats per dollar using equal daily investments.
+## Getting Started
 
-Dynamic SPD: Sats per dollar using variable, feature-driven weights (derived from signals like the 200-day moving average).
+### Prerequisites
 
-Convert SPD values into percentiles to visualize performance relative to the extremes.
+- Python 3.6+
+- Required packages:
+  - pandas
+  - numpy
+  - matplotlib
+  - coinmetrics-api-client (2024.2.6.16+)
 
-Cycle-by-Cycle Backtesting:
+### Installation
 
-Iterate through each 4-year cycle, computing the above metrics for both the uniform and dynamic strategies.
+1. Clone this repository
 
-Calculate the “excess SPD” (the extra sats per dollar gained by dynamic over uniform) and corresponding ROI improvements.
+```bash
+git clone https://github.com/yourusername/hypertrial.git
+cd hypertrial
+```
 
-Visualization & Analysis:
+2. Install required dependencies
 
-Plot the SPD values on a log scale along with their percentiles, showing how the dynamic approach compares with uniform DCA.
+```bash
+pip install pandas numpy matplotlib coinmetrics-api-client
+```
 
-Additional plots illustrate dynamic adjustments, weight distributions, and the ROI improvement per cycle.
+### Usage
 
-Dynamic Strategy Framework:
+Run the main backtest:
 
-Formally define dynamic DCA as a constrained optimization problem: maximize SPD while ensuring weights remain strictly positive and sum to one.
+```bash
+python core/main.py
+```
 
-This framework guarantees daily investments (preserving DCA’s discipline) while allowing adaptive allocation based on market conditions.
+## Project Structure
 
-Outcome & Storage:
+- `core/main.py`: Entry point that orchestrates the backtest process
+- `core/data.py`: Handles data loading from CoinMetrics API
+- `core/user_strategy.py`: Implements the dynamic DCA weight allocation strategy
+- `core/spd.py`: Contains SPD (Sats Per Dollar) calculation logic
+- `core/plots.py`: Visualization functions for strategy performance
+- `core/config.py`: Configuration parameters for the backtest
 
-Results indicate that even a simple dynamic adjustment can boost both SPD and ROI compared to uniform DCA.
+## Configuration
 
-Save the computed dynamic weights for further analysis and future tutorials.
+Key parameters in `config.py`:
+
+- `BACKTEST_START`: Start date for backtest (default: '2013-01-01')
+- `BACKTEST_END`: End date for backtest (default: '2024-12-31')
+- `ALPHA`: Boost factor for z-score (default: 1.25)
+- `REBALANCE_WINDOW`: Days to distribute excess weight (default: 730, two years)
+- `MIN_WEIGHT`: Minimum weight threshold (default: 1e-4)
+
+## License
+
+This project is available under the MIT License.
+
+## Acknowledgments
+
+- [CoinMetrics](https://coinmetrics.io/) for their comprehensive Bitcoin price data
+- Inspired by various Bitcoin DCA strategy research
