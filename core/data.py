@@ -26,7 +26,7 @@ def load_data():
     # If file doesn't exist, try to fetch it from CoinMetrics
     logging.info("Local CSV not found. Attempting to fetch data from CoinMetrics...")
     try:
-        from core.extract_data import extract_btc_data
+        from core.data.extract_data import extract_btc_data
         return extract_btc_data()
     except Exception as e:
         logging.error(f"Failed to fetch data from CoinMetrics: {e}")
