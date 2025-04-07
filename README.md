@@ -69,6 +69,18 @@ python -m core.main --strategy uniform_dca
 python -m core.main --list
 ```
 
+5. Run without generating plots (numeric results only):
+
+```bash
+python -m core.main --no-plots
+```
+
+6. Command-line options can be combined:
+
+```bash
+python -m core.main --strategy uniform_dca --no-plots
+```
+
 ## Project Structure
 
 - `core/main.py`: Entry point that orchestrates the backtest process

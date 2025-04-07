@@ -19,6 +19,11 @@ def parse_args():
         action='store_true',
         help='List all available strategies'
     )
+    parser.add_argument(
+        '--no-plots', '-n',
+        action='store_true',
+        help='Disable plotting (only show numeric results)'
+    )
     return parser.parse_args()
 
 def main():
@@ -75,13 +80,18 @@ def main():
     # Compute weights using the strategy function
     weights = strategy_fn(btc_df)
 
-    # Plot results
-    plot_price_vs_ma200(df_features, weights=weights)
-    plot_final_weights(weights)
-    plot_weight_sums_by_cycle(weights)
+    # Plot results only if not disabled
+    if not args.no_plots:
+        plot_price_vs_ma200(df_features, weights=weights)
+        plot_final_weights(weights)
+        plot_weight_sums_by_cycle(weights)
+    else:
+        # Still print the weight sums even if plots are disabled
+        from core.plots import print_weight_sums_by_cycle
+        print_weight_sums_by_cycle(weights)
 
     # Run SPD backtest and plot results
-    backtest_dynamic_dca(btc_df, strategy_name=strategy_name)
+    backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=not args.no_plots)
 
 if __name__ == '__main__':
     main()

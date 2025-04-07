@@ -71,7 +71,10 @@ def plot_final_weights(weights):
     plt.tight_layout()
     plt.show()
 
-def plot_weight_sums_by_cycle(weights):
+def print_weight_sums_by_cycle(weights):
+    """
+    Print the sum of weights by cycle (without plotting)
+    """
     weights_bt = weights.loc[BACKTEST_START:BACKTEST_END].copy()
     start_year = pd.to_datetime(BACKTEST_START).year
     cycle_labels = weights_bt.index.to_series().apply(lambda dt: (dt.year - start_year) // 4)
@@ -79,6 +82,15 @@ def plot_weight_sums_by_cycle(weights):
     print("Weight sums by cycle (should be close to 1.0):")
     for cycle, total in weight_sums.items():
         print(f"Cycle {(start_year + 4*cycle)}–{(start_year + 4*cycle + 3)}: {total:.4f}")
+    return weight_sums
+
+def plot_weight_sums_by_cycle(weights):
+    """
+    Plot the sum of weights by cycle
+    """
+    weight_sums = print_weight_sums_by_cycle(weights)
+    
+    start_year = pd.to_datetime(BACKTEST_START).year
     label_map = {i: f"{start_year + 4*i}–{start_year + 4*i + 3}" for i in weight_sums.index}
     plt.figure(figsize=(10, 4))
     plt.bar([label_map[i] for i in weight_sums.index], weight_sums.values, width=0.6, alpha=0.7)

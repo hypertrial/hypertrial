@@ -74,7 +74,7 @@ def plot_spd_comparison(df_res, strategy_name):
     plt.tight_layout()
     plt.show()
 
-def backtest_dynamic_dca(df, strategy_name="dynamic_dca"):
+def backtest_dynamic_dca(df, strategy_name="dynamic_dca", show_plots=True):
     df_res = compute_cycle_spd(df, strategy_name)
     dynamic_spd_metrics = {
         'min': df_res['dynamic_spd'].min(),
@@ -101,7 +101,10 @@ def backtest_dynamic_dca(df, strategy_name="dynamic_dca"):
     for cycle, row in df_res.iterrows():
         print(f"  {cycle}: {row['excess_pct']:.2f}%")
 
-    plot_spd_comparison(df_res, strategy_name)
+    if show_plots:
+        plot_spd_comparison(df_res, strategy_name)
+    
+    return df_res
 
 def list_available_strategies():
     """
