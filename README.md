@@ -16,6 +16,7 @@ The framework measures performance using Sats Per Dollar (SPD) across 4-year Bit
 - **Performance Metrics**: Calculates and compares SPD for both uniform DCA and dynamic strategies
 - **Visualization**: Generates detailed plots showing strategy performance over time
 - **Cycle Analysis**: Groups results by Bitcoin's characteristic 4-year cycles
+- **Batch Processing**: Run all strategies at once and compare results in CSV format
 
 ## Getting Started
 
@@ -75,7 +76,19 @@ python -m core.main --list
 python -m core.main --no-plots
 ```
 
-6. Command-line options can be combined:
+6. Backtest all strategies at once and save results to CSV:
+
+```bash
+python -m core.main --backtest-all
+```
+
+7. Customize the output directory:
+
+```bash
+python -m core.main --backtest-all --output-dir my_results
+```
+
+8. Command-line options can be combined:
 
 ```bash
 python -m core.main --strategy uniform_dca --no-plots
@@ -90,6 +103,7 @@ python -m core.main --strategy uniform_dca --no-plots
 - `core/spd.py`: Contains SPD (Sats Per Dollar) calculation logic
 - `core/plots.py`: Visualization functions for strategy performance
 - `core/config.py`: Configuration parameters for the backtest
+- `results/`: Directory where strategy comparison results are stored
 
 ## Creating Your Own Strategies
 
