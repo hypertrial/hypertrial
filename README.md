@@ -31,7 +31,13 @@ The framework measures performance using Sats Per Dollar (SPD) across 4-year Bit
 
 ### Installation
 
-Option 1: Install from source
+Option 1: Install from PyPI (recommended)
+
+```bash
+pip install hypertrial
+```
+
+Option 2: Install from source
 
 ```bash
 git clone https://github.com/mattfaltyn/hypertrial.git
@@ -39,7 +45,7 @@ cd hypertrial
 pip install .
 ```
 
-Option 2: Install in development mode (changes to code are immediately reflected)
+Option 3: Install in development mode (changes to code are immediately reflected)
 
 ```bash
 git clone https://github.com/mattfaltyn/hypertrial.git
@@ -47,7 +53,7 @@ cd hypertrial
 pip install -e .
 ```
 
-Option 3: Install dependencies only (without installing the package)
+Option 4: Install dependencies only (without installing the package)
 
 ```bash
 git clone https://github.com/mattfaltyn/hypertrial.git
@@ -60,7 +66,7 @@ pip install -r requirements.txt
 1. Extract the Bitcoin price data (one-time setup):
 
 ```bash
-python -m core.extract_data
+python -m core.data.extract_data
 ```
 
 2. Run the default strategy backtest:
@@ -127,7 +133,7 @@ hypertrial --strategy uniform_dca --no-plots
 
 - `core/main.py`: Entry point that orchestrates the backtest process
 - `core/data.py`: Handles data loading from local CSV (with fallback to CoinMetrics API)
-- `core/extract_data.py`: Script to fetch and cache Bitcoin price data
+- `core/data/extract_data.py`: Script to fetch and cache Bitcoin price data
 - `core/strategies/`: Directory containing all available DCA strategies
 - `core/spd.py`: Contains SPD (Sats Per Dollar) calculation logic
 - `core/plots.py`: Visualization functions for strategy performance

@@ -5,6 +5,7 @@ This directory contains all strategies that can be used with the Hypertrial back
 ## Available Strategies
 
 - `dynamic_dca.py`: The original threshold-based DCA strategy with constrained early bias rebalancing.
+- `dynamic_dca_100ma.py`: A variant of the dynamic DCA strategy using a 100-day moving average.
 - `uniform_dca.py`: A simple uniform DCA strategy for baseline comparison.
 
 ## Creating Your Own Strategy
