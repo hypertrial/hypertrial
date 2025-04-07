@@ -4,13 +4,14 @@ A Python-based backtesting framework for evaluating Bitcoin DCA strategy perform
 
 ## Overview
 
-Hypertrial implements and tests a threshold-based dynamic DCA strategy that outperforms traditional uniform DCA by strategically adjusting purchase weights based on price deviations from the 200-day moving average.
+Hypertrial implements and tests various Bitcoin DCA strategies including a threshold-based dynamic approach that outperforms traditional uniform DCA by strategically adjusting purchase weights based on price deviations from the 200-day moving average.
 
 The framework measures performance using Sats Per Dollar (SPD) across 4-year Bitcoin market cycles, allowing for objective comparison between different strategies.
 
 ## Features
 
-- **Data Collection**: Automatically retrieves historical Bitcoin price data using CoinMetrics API
+- **Pluggable Strategy System**: Easily create and test custom DCA strategies
+- **Data Collection**: Automatically retrieves and stores historical Bitcoin price data
 - **Dynamic DCA Strategy**: Implements a 200-day MA threshold strategy with customizable parameters
 - **Performance Metrics**: Calculates and compares SPD for both uniform DCA and dynamic strategies
 - **Visualization**: Generates detailed plots showing strategy performance over time
@@ -44,20 +45,48 @@ pip install pandas numpy matplotlib coinmetrics-api-client
 
 ### Usage
 
-Run the main backtest:
+1. Extract the Bitcoin price data (one-time setup):
 
 ```bash
-python core/main.py
+python -m core.extract_data
+```
+
+2. Run the default strategy backtest:
+
+```bash
+python -m core.main
+```
+
+3. Run with a specific strategy:
+
+```bash
+python -m core.main --strategy uniform_dca
+```
+
+4. List all available strategies:
+
+```bash
+python -m core.main --list
 ```
 
 ## Project Structure
 
 - `core/main.py`: Entry point that orchestrates the backtest process
-- `core/data.py`: Handles data loading from CoinMetrics API
-- `core/user_strategy.py`: Implements the dynamic DCA weight allocation strategy
+- `core/data.py`: Handles data loading from local CSV (with fallback to CoinMetrics API)
+- `core/extract_data.py`: Script to fetch and cache Bitcoin price data
+- `core/strategies/`: Directory containing all available DCA strategies
 - `core/spd.py`: Contains SPD (Sats Per Dollar) calculation logic
 - `core/plots.py`: Visualization functions for strategy performance
 - `core/config.py`: Configuration parameters for the backtest
+
+## Creating Your Own Strategies
+
+1. Copy `core/strategies/strategy_template.py` to a new file with a descriptive name
+2. Implement your strategy by extending the StrategyTemplate class
+3. Register your strategy with a unique name using the decorator
+4. Run your strategy with `python -m core.main --strategy your_strategy_name`
+
+See `core/strategies/README.md` for detailed instructions.
 
 ## Configuration
 

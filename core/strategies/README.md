@@ -1,6 +1,6 @@
-# HyperTrial Strategy Framework
+# Hypertrial Strategy Framework
 
-This directory contains all strategies that can be used with the HyperTrial backtesting framework.
+This directory contains all strategies that can be used with the Hypertrial backtesting framework.
 
 ## Available Strategies
 

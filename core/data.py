@@ -1,12 +1,7 @@
 # data.py
 import pandas as pd
-from datetime import datetime
+import os
 import logging
-
-try:
-    from coinmetrics.api_client import CoinMetricsClient
-except ImportError:
-    raise ImportError("coinmetrics.api_client module is required. Install it via pip if necessary.")
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -14,27 +9,30 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-client = CoinMetricsClient()
-asset = 'btc'
-metric = 'PriceUSD'
-start_time = '2010-01-01'
-end_time = datetime.today().strftime('%Y-%m-%d')
-frequency = '1d'
-
 def load_data():
-    logging.info("Fetching BTC ReferenceRate...")
-    btc_df = client.get_asset_metrics(
-        assets=asset,
-        metrics=[metric],
-        frequency=frequency,
-        start_time=start_time,
-        end_time=end_time
-    ).to_dataframe()
+    """
+    Load Bitcoin price data from a local CSV file.
+    If the file doesn't exist, try to fetch it from CoinMetrics.
+    """
+    csv_path = 'core/data/btc_price_data.csv'
+    
+    # Check if the file exists
+    if os.path.exists(csv_path):
+        logging.info(f"Loading BTC data from {csv_path}")
+        btc_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
+        logging.info(f"Loaded {len(btc_df)} records from {btc_df.index.min()} to {btc_df.index.max()}")
+        return btc_df
+    
+    # If file doesn't exist, try to fetch it from CoinMetrics
+    logging.info("Local CSV not found. Attempting to fetch data from CoinMetrics...")
+    try:
+        from core.extract_data import extract_btc_data
+        return extract_btc_data()
+    except Exception as e:
+        logging.error(f"Failed to fetch data from CoinMetrics: {e}")
+        raise RuntimeError("Could not load BTC price data. Please run extract_data.py first to create the CSV file.")
 
-    btc_df = btc_df.rename(columns={metric: 'Close'})
-    btc_df['time'] = pd.to_datetime(btc_df['time']).dt.normalize()
-    btc_df['time'] = btc_df['time'].dt.tz_localize(None)
-    btc_df.set_index('time', inplace=True)
-    btc_df = btc_df[['Close']]
-    btc_df = btc_df.rename(columns={"Close": "btc_close"})
-    return btc_df
+if __name__ == "__main__":
+    # Test data loading
+    df = load_data()
+    print(df.head())
