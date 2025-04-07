@@ -23,7 +23,7 @@ The framework measures performance using Sats Per Dollar (SPD) across 4-year Bit
 ### Prerequisites
 
 - Python 3.6+
-- Required packages:
+- Required packages (automatically installed when you install Hypertrial):
   - pandas
   - numpy
   - matplotlib
@@ -31,17 +31,28 @@ The framework measures performance using Sats Per Dollar (SPD) across 4-year Bit
 
 ### Installation
 
-1. Clone this repository
+Option 1: Install from source
 
 ```bash
-git clone https://github.com/yourusername/hypertrial.git
+git clone https://github.com/mattfaltyn/hypertrial.git
 cd hypertrial
+pip install .
 ```
 
-2. Install required dependencies
+Option 2: Install in development mode (changes to code are immediately reflected)
 
 ```bash
-pip install pandas numpy matplotlib coinmetrics-api-client
+git clone https://github.com/mattfaltyn/hypertrial.git
+cd hypertrial
+pip install -e .
+```
+
+Option 3: Install dependencies only (without installing the package)
+
+```bash
+git clone https://github.com/mattfaltyn/hypertrial.git
+cd hypertrial
+pip install -r requirements.txt
 ```
 
 ### Usage
@@ -58,40 +69,58 @@ python -m core.extract_data
 python -m core.main
 ```
 
+After installation, you can also use the command-line interface:
+
+```bash
+hypertrial  # Run with default options
+```
+
 3. Run with a specific strategy:
 
 ```bash
 python -m core.main --strategy uniform_dca
+# OR
+hypertrial --strategy uniform_dca
 ```
 
 4. List all available strategies:
 
 ```bash
 python -m core.main --list
+# OR
+hypertrial --list
 ```
 
 5. Run without generating plots (numeric results only):
 
 ```bash
 python -m core.main --no-plots
+# OR
+hypertrial --no-plots
 ```
 
 6. Backtest all strategies at once and save results to CSV:
 
 ```bash
 python -m core.main --backtest-all
+# OR
+hypertrial --backtest-all
 ```
 
 7. Customize the output directory:
 
 ```bash
 python -m core.main --backtest-all --output-dir my_results
+# OR
+hypertrial --backtest-all --output-dir my_results
 ```
 
 8. Command-line options can be combined:
 
 ```bash
 python -m core.main --strategy uniform_dca --no-plots
+# OR
+hypertrial --strategy uniform_dca --no-plots
 ```
 
 ## Project Structure

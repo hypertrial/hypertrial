@@ -7,6 +7,9 @@ from typing import Callable, Dict, Any
 # Dictionary to store all available strategies
 _available_strategies = {}
 
+# Expose the strategies dictionary for testing
+available_strategies = _available_strategies
+
 def register_strategy(name: str = None):
     """
     Decorator to register a strategy function
