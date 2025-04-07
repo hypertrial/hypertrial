@@ -127,7 +127,8 @@ def main():
     
     # If backtest all flag is set, run all strategies and exit
     if args.backtest_all:
-        backtest_all_strategies(btc_df, args.output_dir, show_plots=not args.no_plots)
+        # When running all backtests, disable plots by default (ignore no-plots flag)
+        backtest_all_strategies(btc_df, args.output_dir, show_plots=False)
         return
     
     # Otherwise, continue with single strategy backtest
