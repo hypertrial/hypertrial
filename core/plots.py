@@ -3,10 +3,14 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
-from config import BACKTEST_START, BACKTEST_END, MIN_WEIGHT, REBALANCE_WINDOW
+from core.config import BACKTEST_START, BACKTEST_END, MIN_WEIGHT, REBALANCE_WINDOW
 
 def plot_price_vs_ma200(df_features, weights=None):
     df_plot = df_features.loc[BACKTEST_START:BACKTEST_END].copy()
+    
+    # Ensure ma200 exists in the dataframe
+    if 'ma200' not in df_plot.columns:
+        df_plot['ma200'] = df_plot['btc_close'].rolling(window=200, min_periods=1).mean()
 
     plt.figure(figsize=(12, 5))
     plt.plot(df_plot.index, df_plot['btc_close'], label='BTC Price', alpha=0.6)

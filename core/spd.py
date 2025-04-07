@@ -2,14 +2,17 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from config import BACKTEST_START, BACKTEST_END
-from user_strategy import dynamic_rule_causal
+from core.config import BACKTEST_START, BACKTEST_END
+from core.strategies import get_strategy, list_strategies
 
-def compute_cycle_spd(df, weight_fn):
+def compute_cycle_spd(df, strategy_name):
     df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
     cycle_length = pd.DateOffset(years=4)
     current = df_backtest.index.min()
     rows = []
+    
+    # Get the strategy function by name
+    weight_fn = get_strategy(strategy_name)
     full_weights = weight_fn(df).fillna(0).clip(lower=0)
 
     while current <= df_backtest.index.max():
@@ -71,8 +74,8 @@ def plot_spd_comparison(df_res, strategy_name):
     plt.tight_layout()
     plt.show()
 
-def backtest_dynamic_dca(df, strategy_name="Threshold-Based DCA"):
-    df_res = compute_cycle_spd(df, dynamic_rule_causal)
+def backtest_dynamic_dca(df, strategy_name="dynamic_dca"):
+    df_res = compute_cycle_spd(df, strategy_name)
     dynamic_spd_metrics = {
         'min': df_res['dynamic_spd'].min(),
         'max': df_res['dynamic_spd'].max(),
@@ -99,3 +102,13 @@ def backtest_dynamic_dca(df, strategy_name="Threshold-Based DCA"):
         print(f"  {cycle}: {row['excess_pct']:.2f}%")
 
     plot_spd_comparison(df_res, strategy_name)
+
+def list_available_strategies():
+    """
+    Print a list of all available strategies with their descriptions
+    """
+    strategies = list_strategies()
+    print("\nAvailable Strategies:")
+    for name, description in strategies.items():
+        print(f"  {name}: {description}")
+    return strategies
