@@ -36,6 +36,15 @@ All submitted strategies undergo comprehensive security checks:
 
 Strategies with high or medium severity security issues will be automatically blocked from execution. For detailed security requirements, see `tests/TESTS.md`.
 
+### Test Mode Security Behavior
+
+The system detects when running in test mode and applies more relaxed resource limits:
+
+- Execution time limit is extended from 30 seconds to 60 seconds in test mode
+- CPU time limit is extended from 10 seconds to 30 seconds in test mode
+- Certain DataFrame operations (like `to_csv`, `to_datetime`, `to_numpy`, `to_dict`, `to_records`, `to_series`) are permitted in test mode but restricted in production
+- Security tests dynamically adjust validation requirements based on test context
+
 ## Getting Started
 
 ### Prerequisites
@@ -144,7 +153,7 @@ python -m core.data.extract_data
 Create a new file in the `submit_strategies` directory:
 
 ```bash
-cp submit_strategies/strategy_template.py submit_strategies/my__strategy.py
+cp submit_strategies/strategy_template.py submit_strategies/my_strategy.py
 ```
 
 Edit your strategy file following the template structure. Be sure to:
@@ -195,11 +204,14 @@ For the tournament:
   - `spd.py`: Contains SPD (Sats Per Dollar) calculation logic
   - `plots.py`: Visualization functions for strategy performance
   - `config.py`: Configuration parameters for the backtest
+  - `security/`: Security verification and resource monitoring system
 - `submit_strategies/`: **Directory for tournament submissions**
   - `strategy_template.py`: Template to use for your submission
   - `STRATEGIES.md`: Detailed tournament submission instructions
 - `tests/`: Test suite
   - `test_submit_strategies.py`: Tests to verify your submission
+  - `test_security.py`: Tests for the security system
+  - `TESTS.md`: Detailed testing information
 - `results/`: Directory where strategy comparison results are stored
 
 ## Tournament Rules and Guidelines
@@ -229,6 +241,7 @@ The framework implements stringent security controls:
 - **Severity Blocking**: Strategies with high or medium severity issues are blocked
 - **Comprehensive Test Coverage**: Over 100 security tests covering various attack vectors
 - **Restricted Environment**: Limited access to system resources and external services
+- **Test Mode Detection**: Automatically identifies test execution for adjusted limits
 
 Security configuration is defined in `core/security/config.py` and is not customizable by participants.
 

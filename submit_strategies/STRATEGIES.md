@@ -280,6 +280,15 @@ The tournament framework enforces strict security checks to ensure all submissio
 
 To maintain a secure and fair environment, the following restrictions apply to all strategies:
 
+### Test vs. Production Environment
+
+The system detects when it's running in test mode vs. production mode:
+
+- During testing (`pytest`), certain restrictions are relaxed to facilitate development
+- In production (tournament evaluation), stricter security measures are applied
+- Test mode provides more generous resource limits (execution time, CPU time)
+- Certain DataFrame operations are allowed in test mode only
+
 ### Filesystem Restrictions
 
 - **No file writing operations** - Strategies cannot write to the filesystem
@@ -295,14 +304,22 @@ To maintain a secure and fair environment, the following restrictions apply to a
 
 ### Pandas Operations
 
-- **No DataFrame output methods** - Methods that write data are blocked:
+- **DataFrame output methods** - The following methods are blocked in production but allowed in test mode:
 
   - `to_csv()`
+  - `to_datetime()`
+  - `to_numpy()`
+  - `to_dict()`
+  - `to_records()`
+  - `to_series()`
+
+- **Always blocked methods** - These methods are blocked even in test mode:
+
   - `to_pickle()`
   - `to_json()`
   - `to_excel()`
   - `to_feather()`
-  - Any other `to_*()` method
+  - Any other `to_*()` methods not explicitly allowed
 
 - **Allowed pandas_datareader functions** - Only these functions are permitted:
   - `DataReader`
@@ -337,6 +354,16 @@ To maintain a secure and fair environment, the following restrictions apply to a
   - `subprocess` module and all subprocesses
   - `os.system()` and similar commands
   - `sys` module access
+
+### Resource Limits
+
+The framework enforces these resource limits:
+
+| Resource       | Production Limit | Test Mode Limit |
+| -------------- | ---------------- | --------------- |
+| Memory         | 512 MB           | 512 MB          |
+| CPU Time       | 10 seconds       | 30 seconds      |
+| Execution Time | 30 seconds       | 60 seconds      |
 
 These restrictions ensure that strategies operate in a fair, secure, and deterministic environment. Any attempt to circumvent these restrictions will result in immediate rejection of your strategy.
 

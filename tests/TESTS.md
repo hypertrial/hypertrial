@@ -59,19 +59,28 @@ The framework will block execution of strategies that:
 
 Low severity issues will generate warnings but will not block execution.
 
+### Test Mode Detection
+
+The security system automatically detects when it's running in a test environment by checking for 'pytest' or 'unittest' in the loaded modules. In test mode:
+
+- Resource limits are relaxed
+- Certain DataFrame operations are allowed that would be blocked in production
+- Security tests may adjust requirements based on specific test context
+- Memory leak and high CPU warnings are issued instead of blocking errors
+
 ### Security Limits
 
 The framework enforces the following resource limits:
 
-| Resource              | Normal Limit   | Test Mode Limit               |
-| --------------------- | -------------- | ----------------------------- |
-| Memory                | 512 MB         | 512 MB                        |
-| CPU Time              | 10 seconds     | 30 seconds                    |
-| Execution Time        | 30 seconds     | 60 seconds                    |
-| Module Complexity     | 500 lines      | 500 lines                     |
-| Function Complexity   | 120 statements | 120 statements (warning only) |
-| Cyclomatic Complexity | 25             | 25 (warning only)             |
-| Nested Depth          | 6 levels       | 6 levels (warning only)       |
+| Resource              | Production Limit | Test Mode Limit               |
+| --------------------- | ---------------- | ----------------------------- |
+| Memory                | 512 MB           | 512 MB                        |
+| CPU Time              | 10 seconds       | 30 seconds                    |
+| Execution Time        | 30 seconds       | 60 seconds                    |
+| Module Complexity     | 500 lines        | 500 lines                     |
+| Function Complexity   | 120 statements   | 120 statements (warning only) |
+| Cyclomatic Complexity | 25               | 25 (warning only)             |
+| Nested Depth          | 6 levels         | 6 levels (warning only)       |
 
 ### Allowed Modules
 
@@ -85,6 +94,19 @@ Your strategy may only import from these modules:
 - `pandas_datareader` (for external data)
 
 Limited access to the `os` module is permitted, but only for specific path operations.
+
+### DataFrame Operations in Test Mode
+
+The following DataFrame operations are allowed specifically in test mode but blocked in production:
+
+- `to_csv` - Exporting to CSV files
+- `to_datetime` - Converting to datetime format
+- `to_numpy` - Converting to NumPy arrays
+- `to_dict` - Converting to dictionaries
+- `to_records` - Converting to records
+- `to_series` - Converting to Series objects
+
+All other DataFrame write operations remain blocked even in test mode.
 
 ### External Data Security
 
@@ -213,6 +235,7 @@ If your strategy fails due to security issues:
 - Verify you're using only approved external data sources
 - Ensure your code doesn't contain infinite loops or deep recursion
 - Check that your strategy completes within time and memory limits
+- Note that test mode allows certain operations that would be blocked in production
 
 ### API and External Data Issues
 
