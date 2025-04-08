@@ -14,10 +14,55 @@ def is_test_mode():
     """Check if the code is running in test mode (pytest)"""
     return 'pytest' in sys.modules or 'unittest' in sys.modules
 
+def get_bandit_threat_level(file_path: str) -> dict:
+    """Get the Bandit threat level for a strategy file
+    
+    Args:
+        file_path: Path to the strategy file
+        
+    Returns:
+        dict: Containing 'high', 'medium', 'low' counts and total issues
+    """
+    from core.security.bandit_analyzer import BanditAnalyzer
+    
+    try:
+        # Read the strategy file
+        with open(file_path, 'r') as f:
+            code = f.read()
+        
+        # Run Bandit security analysis
+        bandit_analyzer = BanditAnalyzer(code)
+        bandit_success, bandit_issues = bandit_analyzer.analyze()
+        
+        if bandit_success:
+            bandit_summary = bandit_analyzer.get_summary()
+            return {
+                'high_threat_count': bandit_summary['high_severity_count'],
+                'medium_threat_count': bandit_summary['medium_severity_count'],
+                'low_threat_count': bandit_summary['low_severity_count'],
+                'total_threat_count': bandit_summary['issues_count']
+            }
+        else:
+            return {
+                'high_threat_count': 0,
+                'medium_threat_count': 0,
+                'low_threat_count': 0,
+                'total_threat_count': 0
+            }
+    except Exception as e:
+        logger.error(f"Error getting Bandit threat level: {str(e)}")
+        return {
+            'high_threat_count': 0,
+            'medium_threat_count': 0,
+            'low_threat_count': 0,
+            'total_threat_count': 0
+        }
+
 def validate_strategy_file(file_path: str) -> None:
     """Validate a strategy file before execution"""
     from core.security import SecurityError
     from core.security.strategy_security import StrategySecurity
+    from core.security.bandit_analyzer import BanditAnalyzer
     
     try:
         # Check if file exists
@@ -38,6 +83,20 @@ def validate_strategy_file(file_path: str) -> None:
         for i, line in enumerate(lines):
             if len(line) > 800:  # 800 chars is very long
                 raise SecurityError(f"Excessively long line detected at line {i+1}: {len(line)} characters")
+        
+        # Run Bandit security analysis directly on the file
+        logger.info(f"Running Bandit security analysis on {file_path}")
+        bandit_analyzer = BanditAnalyzer(code)
+        bandit_success, bandit_issues = bandit_analyzer.analyze()
+        
+        if bandit_success:
+            bandit_summary = bandit_analyzer.get_summary()
+            logger.info(f"Bandit security scan: {bandit_summary['issues_count']} issues found "
+                      f"(High: {bandit_summary['high_severity_count']}, "
+                      f"Medium: {bandit_summary['medium_severity_count']}, "
+                      f"Low: {bandit_summary['low_severity_count']})")
+        else:
+            logger.warning("Bandit security analysis was skipped - continuing with other checks")
         
         # Analyze the AST
         StrategySecurity.analyze_ast(code)

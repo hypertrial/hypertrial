@@ -15,6 +15,7 @@ from core.security.complexity_analyzer import ComplexityAnalyzer
 from core.security.data_flow_analyzer import DataFlowAnalyzer
 from core.security.resource_monitor import ResourceMonitor
 from core.security.import_hook import ImportHook
+from core.security.bandit_analyzer import BanditAnalyzer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,25 @@ class StrategySecurity:
         from core.security import SecurityError
         
         tree = ast.parse(code)
+        
+        # Run Bandit static security analysis
+        bandit_analyzer = BanditAnalyzer(code)
+        bandit_success, bandit_issues = bandit_analyzer.analyze()
+        
+        if bandit_success and bandit_issues:
+            # Log medium severity issues as warnings
+            medium_issues = [i for i in bandit_issues if i['issue_severity'] == 'MEDIUM']
+            for issue in medium_issues:
+                logger.warning(f"Security warning: {issue['issue_text']} at line {issue['line_number']}")
+            
+            # Get and log the bandit summary
+            bandit_summary = bandit_analyzer.get_summary()
+            logger.info(f"Bandit security scan: {bandit_summary['issues_count']} issues found "
+                       f"(High: {bandit_summary['high_severity_count']}, "
+                       f"Medium: {bandit_summary['medium_severity_count']}, "
+                       f"Low: {bandit_summary['low_severity_count']})")
+        elif not bandit_success:
+            logger.warning("Bandit security analysis was skipped or failed")
         
         # Run complexity analysis
         complexity_analyzer = ComplexityAnalyzer(code)

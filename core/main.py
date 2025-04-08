@@ -9,6 +9,7 @@ from core.spd import backtest_dynamic_dca, list_available_strategies, compute_cy
 from core.strategies import load_strategies, get_strategy, list_strategies
 from core.config import BACKTEST_START
 from core.security import StrategySecurity, SecurityError
+from core.security.utils import get_bandit_threat_level
 import multiprocessing as mp
 from functools import partial
 import time
@@ -77,6 +78,19 @@ def _run_single_backtest(args):
         # Add strategy name
         df_res['strategy'] = strategy_name
         
+        # Get the bandit threat level for this strategy
+        core_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(core_dir)
+        
+        # First check if it's a custom strategy
+        custom_strategy_path = os.path.join(root_dir, 'submit_strategies', f"{strategy_name}.py")
+        if os.path.exists(custom_strategy_path):
+            bandit_threat = get_bandit_threat_level(custom_strategy_path)
+        else:
+            # Must be a core strategy
+            core_strategy_path = os.path.join(core_dir, 'strategies', f"{strategy_name}.py")
+            bandit_threat = get_bandit_threat_level(core_strategy_path)
+        
         # Create summary
         summary = {
             'strategy': strategy_name,
@@ -93,7 +107,11 @@ def _run_single_backtest(args):
             'score': 72.5,
             'statements': 35,
             'cyclomatic': 8,
-            'nesting': 4
+            'nesting': 4,
+            'high_threats': bandit_threat['high_threat_count'],
+            'medium_threats': bandit_threat['medium_threat_count'], 
+            'low_threats': bandit_threat['low_threat_count'],
+            'total_threats': bandit_threat['total_threat_count']
         }
         
         logger.info(f"Completed backtest for strategy: {strategy_name} in {summary['runtime_seconds']:.2f} seconds")
@@ -101,6 +119,7 @@ def _run_single_backtest(args):
         
     except SecurityError as e:
         logger.error(f"Security violation in strategy {strategy_name}: {str(e)}")
+        logger.error("Note: Strategies with high or medium severity security issues will be skipped.")
         raise
     except Exception as e:
         logger.error(f"Error running strategy {strategy_name}: {str(e)}")
@@ -176,6 +195,19 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False):
                 df_res['strategy'] = strategy_name
                 all_spd_results.append(df_res)
                 
+                # Get the bandit threat level for this strategy
+                core_dir = os.path.dirname(os.path.abspath(__file__))
+                root_dir = os.path.dirname(core_dir)
+                
+                # First check if it's a custom strategy
+                custom_strategy_path = os.path.join(root_dir, 'submit_strategies', f"{strategy_name}.py")
+                if os.path.exists(custom_strategy_path):
+                    bandit_threat = get_bandit_threat_level(custom_strategy_path)
+                else:
+                    # Must be a core strategy
+                    core_strategy_path = os.path.join(core_dir, 'strategies', f"{strategy_name}.py")
+                    bandit_threat = get_bandit_threat_level(core_strategy_path)
+                
                 # Create summary metrics
                 summary = {
                     'strategy': strategy_name,
@@ -191,11 +223,16 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False):
                     'score': 72.5,
                     'statements': 35, 
                     'cyclomatic': 8,
-                    'nesting': 4
+                    'nesting': 4,
+                    'high_threats': bandit_threat['high_threat_count'],
+                    'medium_threats': bandit_threat['medium_threat_count'], 
+                    'low_threats': bandit_threat['low_threat_count'],
+                    'total_threats': bandit_threat['total_threat_count']
                 }
                 summary_results.append(summary)
             except SecurityError as e:
                 logger.error(f"Security violation in strategy {strategy_name}: {str(e)}")
+                logger.error("Note: Strategies with high or medium severity security issues will be skipped.")
                 continue
             except Exception as e:
                 logger.error(f"Error running strategy {strategy_name}: {str(e)}")

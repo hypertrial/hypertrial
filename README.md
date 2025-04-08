@@ -22,6 +22,19 @@ As a tournament participant, your task is to develop and submit a custom DCA str
 - **Performance Metrics**: Compare your strategy against others using SPD metrics
 - **Cross-Cycle Analysis**: See how your strategy performs across different Bitcoin market cycles
 - **Equal Evaluation**: All strategies tested against the same historical data
+- **Security Scanning**: All submissions undergo thorough security analysis with Bandit
+
+## Security Verification
+
+All submitted strategies undergo comprehensive security checks:
+
+1. **Static Analysis**: Code is scanned with Bandit, a security linter for Python
+2. **Resource Monitoring**: Memory and CPU usage are restricted and monitored
+3. **Dangerous Pattern Detection**: Prohibited functions and code patterns are blocked
+4. **Module Restrictions**: Only approved modules can be imported
+5. **External Data Validation**: Data sources are verified and sandboxed
+
+Strategies with high or medium severity security issues will be automatically blocked from execution. For detailed security requirements, see `tests/TESTS.md`.
 
 ## Getting Started
 
@@ -207,6 +220,17 @@ Key parameters in `config.py` (DO NOT MODIFY):
 - `ALPHA`: Boost factor for z-score (default: 1.25)
 - `REBALANCE_WINDOW`: Days to distribute excess weight (default: 730, two years)
 - `MIN_WEIGHT`: Minimum weight threshold (default: 1e-4)
+
+### Security Configuration
+
+The framework implements stringent security controls:
+
+- **Bandit Security Analysis**: All code is scanned with Bandit for security issues
+- **Severity Blocking**: Strategies with high or medium severity issues are blocked
+- **Comprehensive Test Coverage**: Over 100 security tests covering various attack vectors
+- **Restricted Environment**: Limited access to system resources and external services
+
+Security configuration is defined in `core/security/config.py` and is not customizable by participants.
 
 ## License
 

@@ -44,6 +44,20 @@ Security tests verify that your strategy:
 3. **Avoids Dangerous Patterns**: Doesn't use prohibited functions or code patterns
 4. **Handles External Data Safely**: Validates external data sources and uses them securely
 5. **Maintains Reasonable Complexity**: Doesn't have excessively complex code structure
+6. **Passes Bandit Analysis**: No high or medium severity security issues detected by Bandit
+
+### Security Blocking Rules
+
+The framework will block execution of strategies that:
+
+- Exceed memory or CPU limits
+- Use prohibited modules or imports
+- Contain dangerous code patterns (e.g., `eval`, `exec`, shell commands)
+- Have high severity security issues detected by Bandit
+- Have medium severity security issues detected by Bandit
+- Use banned functions or methods
+
+Low severity issues will generate warnings but will not block execution.
 
 ### Security Limits
 

@@ -230,6 +230,30 @@ Consider these approaches for your tournament strategy:
 5. You must not modify or depend on changes to the core framework
 6. All entries must pass the test suite to qualify
 7. Only one strategy submission per participant
+8. Your strategy must not have any high or medium severity security issues
+
+## Security Requirements
+
+The tournament framework enforces strict security checks to ensure all submissions are safe. Strategies with any high or medium severity security issues will be automatically blocked from execution.
+
+### Security Constraints
+
+- No dangerous functions like `eval()`, `exec()`, or `os.system()`
+- No subprocess invocations or shell commands
+- No hardcoded credentials or sensitive information
+- No unsafe use of cryptographic functions
+- No unsafe deserialization (e.g., `yaml.load` without safe mode)
+- No dangerous exception handling patterns (e.g., bare try-except blocks)
+
+### Security Verification
+
+Your submission is analyzed using Bandit, a security linter for Python code. To check if your strategy passes security verification:
+
+```bash
+pytest tests/test_security.py -v
+```
+
+If you receive errors about security issues, you'll need to fix them before your strategy can be accepted. The error messages include details about the specific issues found, including the severity level, issue ID, and line number.
 
 ## Tournament Judging Criteria
 
@@ -274,3 +298,42 @@ If you have questions about the tournament or need help troubleshooting your str
 1. Check the documentation in this repository
 2. Review the example strategies
 3. Contact the tournament organizers at [contact information]
+
+### Common Security Issues
+
+The following issues frequently cause strategies to be rejected:
+
+1. **Code Execution**
+
+   - Using `eval()` or `exec()` to execute dynamic code
+   - Using `os.system()` or subprocess functions
+   - Implementing custom imports or code loaders
+
+2. **Credential Handling**
+
+   - Hardcoded API keys or passwords
+   - Saving credentials to disk insecurely
+   - Logging sensitive information
+
+3. **Unsafe Deserialization**
+
+   - Using `yaml.load()` without `Loader=yaml.SafeLoader`
+   - Unpickling data from untrusted sources
+   - Using `eval()` to parse JSON or other data formats
+
+4. **Poor Exception Handling**
+
+   - Empty `try-except` blocks that hide errors
+   - Catching all exceptions without specific handling
+   - Suppressing security-relevant errors
+
+5. **Unsafe External API Calls**
+   - Not validating URLs before requests
+   - Missing timeout parameters
+   - No error handling for API failures
+
+When your strategy is rejected due to security issues, check the error message which will contain:
+
+- The security issue type (e.g., "B102: exec used")
+- The exact line number where the issue was found
+- A description of why this is considered a security concern

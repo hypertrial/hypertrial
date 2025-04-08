@@ -7,6 +7,7 @@ This package includes components for:
 - AST-based security checks
 - Data flow analysis
 - Import security
+- Bandit static code security analysis
 """
 
 # Import key components
@@ -15,6 +16,7 @@ from core.security.import_hook import ImportHook
 from core.security.complexity_analyzer import ComplexityAnalyzer
 from core.security.data_flow_analyzer import DataFlowAnalyzer
 from core.security.strategy_security import StrategySecurity
+from core.security.bandit_analyzer import BanditAnalyzer
 from core.security.config import (
     ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES,
     MAX_MEMORY_MB, MAX_CPU_TIME, MAX_EXECUTION_TIME, 
