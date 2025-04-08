@@ -29,6 +29,66 @@ The tests in `test_submit_strategies.py` check your strategy for:
 3. **Backtest Compatibility**: Your strategy works with the tournament backtesting engine
 4. **Output Generation**: Your strategy produces valid output for evaluation
 5. **Performance Comparison**: Your strategy can be compared against baseline strategies
+6. **Security Compliance**: Your strategy passes security validation checks
+
+## Security Checks
+
+The framework implements comprehensive security checks to ensure that submitted strategies do not contain potentially harmful code. Your strategy must pass all security checks to be considered valid.
+
+### Security Testing
+
+Security tests verify that your strategy:
+
+1. **Respects Resource Limits**: Doesn't exceed memory or CPU usage thresholds
+2. **Uses Allowed Modules Only**: Imports only from the approved list of modules
+3. **Avoids Dangerous Patterns**: Doesn't use prohibited functions or code patterns
+4. **Handles External Data Safely**: Validates external data sources and uses them securely
+5. **Maintains Reasonable Complexity**: Doesn't have excessively complex code structure
+
+### Security Limits
+
+The framework enforces the following resource limits:
+
+| Resource              | Normal Limit   | Test Mode Limit               |
+| --------------------- | -------------- | ----------------------------- |
+| Memory                | 512 MB         | 512 MB                        |
+| CPU Time              | 10 seconds     | 30 seconds                    |
+| Execution Time        | 30 seconds     | 60 seconds                    |
+| Module Complexity     | 500 lines      | 500 lines                     |
+| Function Complexity   | 120 statements | 120 statements (warning only) |
+| Cyclomatic Complexity | 25             | 25 (warning only)             |
+| Nested Depth          | 6 levels       | 6 levels (warning only)       |
+
+### Allowed Modules
+
+Your strategy may only import from these modules:
+
+- `pandas`, `numpy`, `scipy` (data science libraries)
+- `datetime`, `time` (time handling)
+- `typing` (type annotations)
+- `core.config`, `core.strategies`, `core.strategies.base_strategy` (framework modules)
+- `submit_strategies` (your strategy modules)
+- `pandas_datareader` (for external data)
+
+Limited access to the `os` module is permitted, but only for specific path operations.
+
+### External Data Security
+
+When using external data, your strategy must:
+
+1. Use only approved data sources (see below)
+2. Validate URL parameters and inputs
+3. Handle external data failures gracefully
+4. Avoid using external data in dangerous operations (e.g., eval())
+
+#### Approved External Data Sources
+
+- CoinMetrics API: `api.coinmetrics.io`
+- Yahoo Finance: `query1.finance.yahoo.com`, `finance.yahoo.com`
+- CoinGecko: `api.coingecko.com`
+- Nasdaq Data: `data.nasdaq.com`
+
+For more detailed information on security requirements, see `core/SECURITY.md`.
 
 ### Testing Strategies with External Data Sources
 
@@ -38,6 +98,7 @@ If your strategy uses external data sources, the tests will verify:
 2. That it handles API failures or connection issues gracefully
 3. That the final output conforms to the required format
 4. That the strategy completes within a reasonable time frame
+5. That external data is accessed in a secure manner
 
 To ensure your strategy with external data passes the tests:
 
@@ -45,6 +106,7 @@ To ensure your strategy with external data passes the tests:
 2. Add error handling for API calls and provide fallback behavior
 3. Consider adding a caching mechanism to avoid repeated API calls during testing
 4. Make sure your API usage respects rate limits to avoid test failures
+5. Only use approved data sources and validate URLs before use
 
 Example of a robust external data retrieval function:
 
@@ -102,6 +164,7 @@ For your strategy to qualify for the tournament, it must:
 - Not modify the input data in harmful ways
 - Handle external data retrieval properly, if applicable
 - Execute efficiently (complete within reasonable time)
+- Pass all security validation checks
 
 ## Troubleshooting Your Tournament Submission
 
@@ -126,6 +189,17 @@ If your strategy fails during execution:
 - Make sure you're not modifying the input DataFrame (use `.copy()`)
 - For external data, add robust error handling for API calls
 
+### Security Violations
+
+If your strategy fails due to security issues:
+
+- Check you're only importing allowed modules
+- Ensure your code doesn't exceed complexity limits
+- Remove any use of dangerous functions (`eval`, `exec`, `os.system`, etc.)
+- Verify you're using only approved external data sources
+- Ensure your code doesn't contain infinite loops or deep recursion
+- Check that your strategy completes within time and memory limits
+
 ### API and External Data Issues
 
 If your strategy fails due to external data problems:
@@ -134,6 +208,8 @@ If your strategy fails due to external data problems:
 - Implement caching to avoid network failures during testing
 - Add timeouts for API calls to prevent tests from hanging
 - Consider mocking the API responses for more reliable testing
+- Only use approved data sources (see the Security Checks section)
+- Add URL validation to prevent security issues
 
 ### Weight Generation Issues
 
@@ -153,6 +229,7 @@ If your strategy runs but performs poorly:
 - Make sure your strategy logic is sound
 - Verify your normalization logic works as expected
 - Cache external data to avoid repeated API calls
+- Ensure your code doesn't approach resource limits
 
 ## Detailed Test Structure
 
@@ -174,6 +251,7 @@ The `test_submit_strategies.py` file contains two main test classes:
 
 The remaining tests in the framework are for reference and validate the core system functionality:
 
+- `test_security.py`: Tests for security validation and sandboxing
 - `core/strategies/`: Tests for strategy registration and baseline strategies
 - `core/`: Tests for data handling, performance calculation, and visualization
 - `test_installation.py`: Tests for proper installation of the framework
@@ -248,6 +326,27 @@ except Exception:
     df['new_feature'] = df['btc_close'] / df['btc_close'].mean()  # Some reasonable default
 ```
 
+### Security Violations
+
+If your strategy is failing due to security violations:
+
+```python
+# Avoid dangerous operations like this
+# BAD: eval(f"2 * {external_data['value']}")
+
+# Instead, do direct calculations
+# GOOD: result = 2 * external_data['value']
+
+# Avoid deep loops or recursion
+# BAD: complex nested loops with no clear exit
+# GOOD: vectorized operations or simple loops with clear termination
+
+# Avoid modifying the input DataFrame directly
+# BAD: df['new_column'] = calculation
+# GOOD: df_copy = df.copy()
+#       df_copy['new_column'] = calculation
+```
+
 ## Final Verification
 
 After your tests pass locally, run one final verification:
@@ -258,4 +357,7 @@ python -m core.main --strategy your_strategy_name
 
 # Compare against baseline strategies
 python -m core.main --backtest-all --output-dir results
+
+# Run security tests specifically
+pytest tests/test_security.py -v
 ```

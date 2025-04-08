@@ -143,7 +143,36 @@ def list_available_strategies():
     Print a list of all available strategies with their descriptions
     """
     strategies = list_strategies()
+    
+    if not strategies:
+        print("\nNo strategies available. Please check your installation.")
+        return strategies
+    
     print("\nAvailable Strategies:")
+    print("=====================")
+    
+    # Group by core and custom strategies
+    core_strategies = {}
+    custom_strategies = {}
+    
     for name, description in strategies.items():
-        print(f"  {name}: {description}")
+        if any(name.startswith(prefix) for prefix in ['dynamic_dca', 'uniform_dca']):
+            core_strategies[name] = description
+        else:
+            custom_strategies[name] = description
+    
+    # Print core strategies
+    if core_strategies:
+        print("\nCore Strategies:")
+        print("-----------------")
+        for name, description in sorted(core_strategies.items()):
+            print(f"  {name:20}: {description.split('.')[0] if description else 'No description'}")
+    
+    # Print custom strategies
+    if custom_strategies:
+        print("\nCustom Strategies:")
+        print("------------------")
+        for name, description in sorted(custom_strategies.items()):
+            print(f"  {name:20}: {description.split('.')[0] if description else 'No description'}")
+    
     return strategies

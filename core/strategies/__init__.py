@@ -1,84 +1,85 @@
 # strategies/__init__.py
 import os
 import importlib
-import inspect
-from typing import Callable, Dict, Any
+import logging
+from typing import Dict, Any, Callable
+from core.security import validate_strategy_file, StrategySecurity
 
-# Dictionary to store all available strategies
-_available_strategies = {}
+logger = logging.getLogger(__name__)
 
-# Expose the strategies dictionary for testing
-available_strategies = _available_strategies
+# Dictionary to store registered strategies
+_strategies: Dict[str, Callable] = {}
 
-def register_strategy(name: str = None):
-    """
-    Decorator to register a strategy function
-    
-    Args:
-        name (str, optional): The name of the strategy. If None, the function name will be used.
-    """
-    def decorator(func: Callable):
-        strategy_name = name or func.__name__
-        _available_strategies[strategy_name] = func
+# Expose _strategies as available_strategies for backward compatibility
+available_strategies = _strategies
+
+def register_strategy(name: str) -> Callable:
+    """Decorator to register a strategy with security checks"""
+    def decorator(func: Callable) -> Callable:
+        # Apply security decorator
+        func = StrategySecurity.secure_strategy(func)
+        
+        # Register the strategy
+        _strategies[name] = func
+        logger.info(f"Registered strategy: {name}")
         return func
     return decorator
 
+def load_strategies() -> None:
+    """Load all strategies from both core/strategies and submit_strategies directories"""
+    # Load core strategies first
+    core_strategies_dir = os.path.dirname(os.path.abspath(__file__))
+    logger.info(f"Loading core strategies from: {core_strategies_dir}")
+    
+    # Load core strategies (no security validation needed)
+    for filename in os.listdir(core_strategies_dir):
+        if filename.endswith('.py') and not filename.startswith('__') and filename != 'base_strategy.py' and filename != 'utils.py':
+            try:
+                # Import the module
+                module_name = f"core.strategies.{filename[:-3]}"
+                importlib.import_module(module_name)
+                logger.info(f"Successfully loaded core strategy from {filename}")
+            except Exception as e:
+                logger.error(f"Failed to load core strategy from {filename}: {str(e)}")
+                continue
+    
+    # Load user-submitted strategies
+    # Get path to project root directory (parent of core directory)
+    core_dir = os.path.dirname(os.path.dirname(__file__))
+    root_dir = os.path.dirname(core_dir)
+    strategies_dir = os.path.join(root_dir, 'submit_strategies')
+    
+    logger.info(f"Loading user strategies from: {strategies_dir}")
+    
+    if not os.path.exists(strategies_dir):
+        logger.error(f"User strategy directory not found: {strategies_dir}")
+        return
+    
+    # Validate each user strategy file
+    for filename in os.listdir(strategies_dir):
+        if filename.endswith('.py') and not filename.startswith('__') and filename != 'strategy_template.py':
+            file_path = os.path.join(strategies_dir, filename)
+            try:
+                # Validate the strategy file
+                validate_strategy_file(file_path)
+                
+                # Import the module
+                module_name = f"submit_strategies.{filename[:-3]}"
+                importlib.import_module(module_name)
+                
+                logger.info(f"Successfully loaded user strategy from {filename}")
+            except Exception as e:
+                logger.error(f"Failed to load user strategy from {filename}: {str(e)}")
+                continue
+                
+    logger.info(f"Total strategies loaded: {len(_strategies)}")
+
 def get_strategy(name: str) -> Callable:
-    """
-    Get a strategy by name
-    
-    Args:
-        name (str): The name of the strategy
-    
-    Returns:
-        Callable: The strategy function
-    """
-    if name not in _available_strategies:
-        raise ValueError(f"Strategy '{name}' not found. Available strategies: {list(_available_strategies.keys())}")
-    return _available_strategies[name]
+    """Get a registered strategy by name"""
+    if name not in _strategies:
+        raise ValueError(f"Strategy '{name}' not found")
+    return _strategies[name]
 
 def list_strategies() -> Dict[str, str]:
-    """
-    Get a list of all available strategies with their descriptions
-    
-    Returns:
-        Dict[str, str]: A dictionary mapping strategy names to their docstrings
-    """
-    return {name: func.__doc__ or "No description available" 
-            for name, func in _available_strategies.items()}
-
-def load_strategies():
-    """
-    Load all strategy modules from the core/strategies directory
-    and the top-level submit_strategies directory
-    """
-    # Load strategies from core/strategies
-    core_strategies_dir = os.path.dirname(os.path.abspath(__file__))
-    for filename in os.listdir(core_strategies_dir):
-        if filename.endswith('.py') and filename != '__init__.py':
-            module_name = filename[:-3]  # Remove .py extension
-            module = importlib.import_module(f'core.strategies.{module_name}')
-            
-            # Find all functions in the module with the register_strategy decorator
-            for _, obj in inspect.getmembers(module):
-                if callable(obj) and hasattr(obj, '__module__') and obj.__module__ == module.__name__:
-                    # The function will be automatically registered if decorated
-                    pass
-    
-    # Load strategies from top-level submit_strategies directory
-    try:
-        # Get path to top-level submit_strategies directory
-        top_strategies_dir = os.path.join(os.path.dirname(os.path.dirname(core_strategies_dir)), 'submit_strategies')
-        if os.path.exists(top_strategies_dir):
-            for filename in os.listdir(top_strategies_dir):
-                if filename.endswith('.py') and filename != '__init__.py':
-                    module_name = filename[:-3]  # Remove .py extension
-                    module = importlib.import_module(f'submit_strategies.{module_name}')
-                    
-                    # Find all functions in the module with the register_strategy decorator
-                    for _, obj in inspect.getmembers(module):
-                        if callable(obj) and hasattr(obj, '__module__') and obj.__module__ == module.__name__:
-                            # The function will be automatically registered if decorated
-                            pass
-    except ImportError as e:
-        print(f"Warning: Could not import from submit_strategies directory: {e}") 
+    """List all registered strategies with their docstrings"""
+    return {name: func.__doc__ or "No description" for name, func in _strategies.items()} 

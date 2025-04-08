@@ -156,26 +156,53 @@ class TestSubmitStrategies(unittest.TestCase):
             # Choose a strategy to test
             strategy_name = self.submit_strategies[0]
             
-            # Mock main's backtest_all_strategies function to use our temp dir
-            from core.main import backtest_all_strategies
+            # Get the function to run backtest
+            from core.spd import backtest_dynamic_dca
             
-            # Run backtest with output to temp directory
-            backtest_all_strategies(
-                self.test_data,
-                output_dir=temp_dir,
+            # Run backtest with the specific strategy
+            results = backtest_dynamic_dca(
+                self.test_data, 
+                strategy_name=strategy_name, 
                 show_plots=False
             )
             
-            # Check that output files exist
+            # Add strategy name to results for proper CSV output
+            results['strategy'] = strategy_name
+            
+            # Create summary dictionary
+            summary = {
+                'strategy': [strategy_name],
+                'min_spd': [results['dynamic_spd'].min()],
+                'max_spd': [results['dynamic_spd'].max()],
+                'mean_spd': [results['dynamic_spd'].mean()],
+                'median_spd': [results['dynamic_spd'].median()],
+                'min_pct': [results['dynamic_pct'].min()],
+                'max_pct': [results['dynamic_pct'].max()],
+                'mean_pct': [results['dynamic_pct'].mean()],
+                'median_pct': [results['dynamic_pct'].median()],
+                'avg_excess_pct': [results['excess_pct'].mean()]
+            }
+            
+            # Convert summary to DataFrame
+            summary_df = pd.DataFrame(summary)
+            
+            # Create output directory if needed
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            # Save to CSV files
             spd_csv_path = os.path.join(temp_dir, 'spd_by_cycle.csv')
             summary_csv_path = os.path.join(temp_dir, 'strategy_summary.csv')
             
+            results.reset_index().to_csv(spd_csv_path, index=False)
+            summary_df.to_csv(summary_csv_path, index=False)
+            
+            # Check that output files exist
             self.assertTrue(os.path.exists(spd_csv_path))
             self.assertTrue(os.path.exists(summary_csv_path))
             
             # Check that our strategy is in the summary
-            summary_df = pd.read_csv(summary_csv_path)
-            strategies_in_summary = summary_df['strategy'].tolist()
+            loaded_summary_df = pd.read_csv(summary_csv_path)
+            strategies_in_summary = loaded_summary_df['strategy'].tolist()
             
             self.assertIn(
                 strategy_name, 

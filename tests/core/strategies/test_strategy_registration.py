@@ -3,7 +3,7 @@ import pandas as pd
 from unittest.mock import patch, MagicMock
 
 # Import the strategy registration functionality
-from core.strategies import register_strategy, get_strategy, list_strategies, _available_strategies
+from core.strategies import register_strategy, get_strategy, list_strategies, available_strategies
 
 def test_strategy_registration():
     """Test that strategies can be registered correctly."""
@@ -31,7 +31,7 @@ def test_strategy_registration():
 def test_strategy_retrieval():
     """Test that strategies can be retrieved by name."""
     # Clear existing registered strategies for this test
-    with patch('core.strategies._available_strategies', {}):
+    with patch('core.strategies.available_strategies', {}):
         # Define a test strategy function
         @register_strategy("test_strategy")
         def test_strategy_fn(df):
@@ -47,7 +47,7 @@ def test_strategy_retrieval():
 def test_strategy_list():
     """Test that list_strategies returns all registered strategies with docstrings."""
     # Clear existing registered strategies for this test
-    with patch('core.strategies._available_strategies', {}):
+    with patch('core.strategies.available_strategies', {}):
         # Define test strategy functions
         @register_strategy("test_strategy1")
         def test_strategy_fn1(df):
@@ -71,7 +71,7 @@ def test_strategy_list():
 def test_get_strategy_unknown():
     """Test that an error is raised when trying to get an unknown strategy."""
     # Clear existing registered strategies for this test
-    with patch('core.strategies._available_strategies', {}):
+    with patch('core.strategies.available_strategies', {}):
         # Try to get an unknown strategy
         with pytest.raises(ValueError):
             get_strategy("unknown_strategy") 
