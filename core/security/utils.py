@@ -122,6 +122,13 @@ def validate_strategy_file(file_path: str) -> None:
             r'code\s*\..+?exec',               # code module exec
             r'importlib',                      # importlib
             r'open\s*\(.+?,\s*[\'"]w',         # Opening files for writing
+            r'with\s+open\s*\(.+?,\s*[\'"][wa+]', # with open for writing/appending
+            r'\.write\s*\(',                   # Any write method
+            r'\.writelines\s*\(',              # Any writelines method
+            r'io\.',                           # io module
+            r'pathlib\..*?\.write',            # pathlib writing
+            r'os\.makedirs',                   # Creating directories
+            r'os\.mkdir',                      # Creating a directory
             r'shutil\.',                       # File operations
             r'os\.path\.expanduser\(',         # Getting user directory
             r'os\.environ',                    # Accessing environment variables

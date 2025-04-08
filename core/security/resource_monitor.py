@@ -5,7 +5,10 @@ import resource
 import psutil
 import logging
 from core.security.utils import is_test_mode
-from core.security.config import MAX_MEMORY_MB, MAX_CPU_TIME, MAX_EXECUTION_TIME
+from core.security.config import (
+    MAX_MEMORY_MB, MAX_CPU_TIME, MAX_EXECUTION_TIME,
+    TEST_MAX_CPU_TIME, TEST_MAX_EXECUTION_TIME
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -78,13 +81,15 @@ class ResourceMonitor:
         
         # Check CPU time
         cpu_time = resource.getrusage(resource.RUSAGE_SELF).ru_utime
-        if cpu_time > MAX_CPU_TIME:
-            raise SecurityError(f"CPU time exceeded limit: {cpu_time:.2f}s > {MAX_CPU_TIME}s")
+        cpu_limit = TEST_MAX_CPU_TIME if self.test_mode else MAX_CPU_TIME
+        if cpu_time > cpu_limit:
+            raise SecurityError(f"CPU time exceeded limit: {cpu_time:.2f}s > {cpu_limit}s")
         
         # Check total execution time
         elapsed = time.time() - self.start_time
-        if elapsed > MAX_EXECUTION_TIME:
-            raise SecurityError(f"Execution time exceeded limit: {elapsed:.2f}s > {MAX_EXECUTION_TIME}s")
+        execution_limit = TEST_MAX_EXECUTION_TIME if self.test_mode else MAX_EXECUTION_TIME
+        if elapsed > execution_limit:
+            raise SecurityError(f"Execution time exceeded limit: {elapsed:.2f}s > {execution_limit}s")
         
         # Check for potential memory leaks
         self.check_for_memory_leak()
