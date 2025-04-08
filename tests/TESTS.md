@@ -1,218 +1,261 @@
-# Hypertrial Tests
+# Tournament Strategy Verification Tests
 
-This directory contains tests for the Hypertrial Bitcoin DCA Backtesting Framework.
+This directory contains tests for verifying that your tournament submission meets all requirements.
 
-## Test Structure
+## Tournament Test Focus
 
-The tests are organized according to the module structure of the codebase:
+As a tournament participant, you should focus on the `test_submit_strategies.py` file, which specifically tests strategies submitted to the `submit_strategies` directory.
 
-- `conftest.py`: Common test fixtures including sample price data
-- `core/strategies/`: Tests for strategy-related functionality
-  - `test_strategy_registration.py`: Tests for strategy registration functions
-  - `test_uniform_strategy.py`: Tests for the Uniform DCA strategy
-  - `test_dynamic_strategy.py`: Tests for the Dynamic DCA strategy
-- `core/`: Tests for core modules
-  - `test_data_validation.py`: Tests for validating Bitcoin price data
-  - `test_data_formats.py`: Tests for handling different data formats
-  - `test_error_handling.py`: Tests for API and data error handling
-  - `test_config.py`: Tests for configuration handling
-  - `test_spd_calculation.py`: Tests for SPD calculation functions
-  - `test_spd_integration.py`: Tests for strategy integration with SPD calculations
-  - `test_spd_advanced.py`: Tests for advanced SPD functionality and edge cases
-  - `test_performance_benchmarks.py`: Tests for backtest performance benchmarking
-  - `test_strategy_performance.py`: Tests for measuring strategy implementation performance
+## Verifying Your Tournament Submission
 
-### Data Validation Tests
+Your submitted strategy must pass all tests in `test_submit_strategies.py` to be considered valid for the tournament. These tests ensure your strategy follows the required format and can be executed successfully within the tournament framework.
 
-The `test_data_validation.py` file contains tests that focus on validating Bitcoin price data:
+### Running the Tournament Verification Tests
 
-- **Basic Validation Tests**:
-
-  - Test validation of valid data
-  - Test handling of missing required columns
-  - Test handling of invalid price values (negative, zero, NaN, infinity)
-
-- **Data Cleaning Tests**:
-
-  - Test cleaning of data with missing values
-  - Test handling of duplicate dates
-  - Test handling of data gaps
-  - Test fixing of corrupted values
-
-- **Date Range Tests**:
-  - Test validation of minimum date range
-  - Test handling of duplicate dates
-  - Test validation of date gaps
-
-### Data Format Tests
-
-The `test_data_formats.py` file contains tests for handling different data formats:
-
-- **CSV Format Tests**:
-
-  - Test loading comma-separated files
-  - Test loading semicolon-separated files
-  - Test loading tab-separated files
-
-- **Date Format Tests**:
-
-  - Test ISO format (YYYY-MM-DD)
-  - Test US format (MM/DD/YYYY)
-  - Test European format (DD/MM/YYYY)
-  - Test different date separators
-
-- **Column Name Tests**:
-
-  - Test standard "btc_close" column
-  - Test alternative names like "Price", "Close", "BTC-USD"
-
-- **Data Source Tests**:
-  - Test JSON to DataFrame conversion
-  - Test CoinMetrics API format handling
-
-### Error Handling Tests
-
-The `test_error_handling.py` file contains tests for API and data error handling:
-
-- **API Error Tests**:
-
-  - Test handling of API connection errors
-  - Test handling of API timeout errors
-  - Test handling of malformed JSON responses
-
-- **Data Error Tests**:
-  - Test handling of malformed CSV files
-  - Test handling of empty data
-  - Test handling of invalid date formats
-  - Test handling of extreme price values
-  - Test handling of corrupted data
-
-### SPD Integration Tests
-
-The `test_spd_integration.py` file contains tests that focus on how different strategy implementations integrate with the SPD calculation module. These tests ensure that strategies with various weight generation logic can work with the SPD calculation pipeline:
-
-- **Strategy Output Format Tests**:
-
-  - Test strategies that return Series weights
-  - Test strategies that return weights in other formats
-  - Test strategies with partial date coverage
-
-- **Weight Normalization Tests**:
-
-  - Test unnormalized weights (sum ≠ 1.0)
-  - Test negative weights and clipping behavior
-  - Test weights greater than 1.0
-  - Test NaN and missing values handling
-
-- **Performance Metrics Consistency Tests**:
-  - Test min/max SPD calculations
-  - Test uniform SPD calculation
-  - Test dynamic SPD calculation
-  - Test percentile calculations
-  - Test different weight distributions
-
-### SPD Advanced Tests
-
-The `test_spd_advanced.py` file contains advanced tests that focus on more complex interactions and edge cases:
-
-- **Strategy Substitution Tests**:
-
-  - Test that different strategies yield different SPD results
-  - Verify that strategy name is properly propagated to results and plots
-
-- **Error Handling Tests**:
-
-  - Test handling of malformed data returned by strategies
-  - Test behavior when strategies raise exceptions
-
-- **Performance Comparison Tests**:
-  - Test with strategies that have predictable performance patterns
-  - Verify comparative metrics calculations
-
-### Performance Benchmarking Tests
-
-The `test_performance_benchmarks.py` file contains tests that measure the performance characteristics of the backtest process:
-
-- **Execution Time Tests**:
-
-  - Measure execution time for different data sizes
-  - Test performance with different strategies
-  - Evaluate performance impact of adding data fields
-
-- **Memory Usage Tests**:
-
-  - Measure memory consumption during backtest execution
-  - Track peak memory usage with different workloads
-  - Test memory scaling with increasing data size
-
-- **Plotting Overhead Tests**:
-
-  - Measure the performance impact of generating plots
-  - Compare execution time with and without plotting
-
-- **CPU Profiling Tests**:
-  - Profile CPU usage during backtest execution
-  - Identify performance bottlenecks
-
-### Strategy Performance Tests
-
-The `test_strategy_performance.py` file contains tests that specifically focus on the performance of different strategy implementations:
-
-- **Strategy Execution Time Comparison**:
-
-  - Measure execution time of strategies with varying complexity
-  - Calculate the percentage of backtest time spent on strategy calculation
-  - Compare strategies with different computational requirements
-
-- **Strategy Memory Footprint Tests**:
-
-  - Measure memory usage of different strategy implementations
-  - Compare memory-efficient vs memory-intensive strategies
-
-- **Vectorized vs Iterative Implementation Tests**:
-
-  - Compare performance between vectorized and iterative implementations
-  - Measure speedup factors for different implementation approaches
-
-- **Strategy Caching Benefits Tests**:
-  - Measure performance benefits of caching intermediate results
-  - Compare execution times with and without caching
-  - Evaluate the impact of caching on strategy performance
-
-## Running Tests
-
-To run all tests:
+To verify your tournament submission:
 
 ```bash
-pytest
+pytest tests/test_submit_strategies.py -v
 ```
 
-To run a specific test module:
+The `-v` flag provides verbose output so you can see exactly which tests pass or fail.
+
+### What the Verification Tests Check
+
+The tests in `test_submit_strategies.py` check your strategy for:
+
+1. **Discovery and Loading**: Your strategy is properly registered and can be loaded
+2. **Execution Correctness**: Your strategy executes without errors
+3. **Backtest Compatibility**: Your strategy works with the tournament backtesting engine
+4. **Output Generation**: Your strategy produces valid output for evaluation
+5. **Performance Comparison**: Your strategy can be compared against baseline strategies
+
+### Testing Strategies with External Data Sources
+
+If your strategy uses external data sources, the tests will verify:
+
+1. That your strategy can retrieve the external data successfully
+2. That it handles API failures or connection issues gracefully
+3. That the final output conforms to the required format
+4. That the strategy completes within a reasonable time frame
+
+To ensure your strategy with external data passes the tests:
+
+1. Include all necessary API code and keys in your strategy file
+2. Add error handling for API calls and provide fallback behavior
+3. Consider adding a caching mechanism to avoid repeated API calls during testing
+4. Make sure your API usage respects rate limits to avoid test failures
+
+Example of a robust external data retrieval function:
+
+```python
+def get_external_data(start_date, end_date):
+    """
+    Retrieves external data with proper error handling.
+
+    Args:
+        start_date: Start date for data retrieval
+        end_date: End date for data retrieval
+
+    Returns:
+        DataFrame with external data or None if retrieval failed
+    """
+    # Create a cache directory if it doesn't exist
+    cache_dir = os.path.join(os.path.dirname(__file__), 'cache')
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Create a cache file path
+    cache_file = os.path.join(cache_dir, f'external_data_{start_date}_{end_date}.csv')
+
+    # Check if cache exists
+    if os.path.exists(cache_file):
+        try:
+            return pd.read_csv(cache_file, index_col=0, parse_dates=True)
+        except Exception:
+            # If cache is corrupted, proceed to fetch data
+            pass
+
+    # Try to fetch the data
+    try:
+        # Your API call logic here
+        import pandas_datareader as pdr
+        data = pdr.get_data_yahoo('GLD', start_date, end_date)
+
+        # Save to cache
+        data.to_csv(cache_file)
+
+        return data
+    except Exception as e:
+        print(f"Warning: Could not retrieve external data: {e}")
+        return None
+```
+
+### Passing Tournament Requirements
+
+For your strategy to qualify for the tournament, it must:
+
+- Be located in the `submit_strategies` directory
+- Use the `@register_strategy` decorator with a unique name
+- Return a valid pandas Series containing weights for each date
+- Have non-negative weights
+- Handle the backtest date range properly
+- Not modify the input data in harmful ways
+- Handle external data retrieval properly, if applicable
+- Execute efficiently (complete within reasonable time)
+
+## Troubleshooting Your Tournament Submission
+
+If your strategy fails any tests, here's how to diagnose and fix common issues:
+
+### Strategy Not Found
+
+If your strategy isn't being discovered:
+
+- Ensure your file is in the `submit_strategies` directory
+- Check that you've used the `@register_strategy` decorator correctly
+- Verify your strategy name is unique and valid
+- Make sure your strategy function returns the result of `YourClass.get_strategy_function()(df)`
+
+### Execution Failures
+
+If your strategy fails during execution:
+
+- Check for errors in handling NaN or missing values in the data
+- Ensure all features are calculated before being used
+- Verify your date ranges match those in `core/config.py`
+- Make sure you're not modifying the input DataFrame (use `.copy()`)
+- For external data, add robust error handling for API calls
+
+### API and External Data Issues
+
+If your strategy fails due to external data problems:
+
+- Include fallback behavior when external data can't be retrieved
+- Implement caching to avoid network failures during testing
+- Add timeouts for API calls to prevent tests from hanging
+- Consider mocking the API responses for more reliable testing
+
+### Weight Generation Issues
+
+If your weights are causing problems:
+
+- Ensure weights are non-negative
+- Check that weights are normalized within each cycle
+- Make sure your Series has the correct datetime indices
+- Verify your weights are not all zeros or contain extreme values
+
+### Performance Issues
+
+If your strategy runs but performs poorly:
+
+- Consider using vectorized operations instead of loops
+- Avoid unnecessarily complex calculations
+- Make sure your strategy logic is sound
+- Verify your normalization logic works as expected
+- Cache external data to avoid repeated API calls
+
+## Detailed Test Structure
+
+The `test_submit_strategies.py` file contains two main test classes:
+
+1. **`TestSubmitStrategies`**: Tests existing strategies in the `submit_strategies` directory
+
+   - `test_submit_strategies_loaded`: Verifies strategies are properly loaded
+   - `test_submit_strategies_execution`: Tests strategy execution
+   - `test_submit_strategies_backtest`: Tests backtest compatibility
+   - `test_submit_strategies_comparison`: Compares strategies against baseline
+   - `test_results_output`: Verifies results output generation
+
+2. **`TestDynamicSubmitStrategies`**: Tests creating and running strategies dynamically
+   - Creates a temporary strategy file
+   - Tests loading, execution, and backtesting
+
+## Other Tests (For Reference Only)
+
+The remaining tests in the framework are for reference and validate the core system functionality:
+
+- `core/strategies/`: Tests for strategy registration and baseline strategies
+- `core/`: Tests for data handling, performance calculation, and visualization
+- `test_installation.py`: Tests for proper installation of the framework
+
+## Generating Test Reports
+
+If you want to generate a detailed report of your test results:
 
 ```bash
-pytest tests/core/test_data_validation.py
+pytest tests/test_submit_strategies.py -v --html=report.html
 ```
 
-To run a specific test function:
+This requires the pytest-html plugin:
 
 ```bash
-pytest tests/core/test_data_validation.py::test_validate_price_data_basic
+pip install pytest-html
 ```
 
-## Test Coverage
+## Fixing Common Test Failures
 
-To run tests with coverage reporting:
+### Strategy Not Recognized
+
+If your strategy isn't recognized by the system:
+
+```python
+# Make sure your decorator is correct
+@register_strategy("your_strategy_name")  # Use a unique name
+def your_strategy_name(df):
+    """Brief description of your tournament strategy"""
+    return YourStrategyClass.get_strategy_function()(df)
+```
+
+### Invalid Weights
+
+If your weights are invalid:
+
+```python
+# Ensure weights are normalized per cycle
+start_year = pd.to_datetime(BACKTEST_START).year
+cycle_labels = df_backtest.index.to_series().apply(lambda dt: (dt.year - start_year) // 4)
+
+for cycle, group in weights.groupby(cycle_labels):
+    cycle_sum = group.sum()
+    if cycle_sum > 0:
+        weights.loc[group.index] = weights.loc[group.index] / cycle_sum
+```
+
+### Index Mismatch
+
+If you have index mismatches:
+
+```python
+# Ensure you're using the correct date range
+df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
+weights = pd.Series(index=df_backtest.index, data=0.0)
+# Fill in weights...
+```
+
+### External Data Issues
+
+If you're having problems with external data:
+
+```python
+# Proper error handling for external data
+try:
+    # Your API call here
+    external_data = get_external_data()
+    # Use the data
+    df['new_feature'] = process_external_data(external_data)
+except Exception:
+    # Fallback behavior
+    df['new_feature'] = df['btc_close'] / df['btc_close'].mean()  # Some reasonable default
+```
+
+## Final Verification
+
+After your tests pass locally, run one final verification:
 
 ```bash
-pip install pytest-cov
-pytest --cov=core
+# Verify strategy loads and runs
+python -m core.main --strategy your_strategy_name
+
+# Compare against baseline strategies
+python -m core.main --backtest-all --output-dir results
 ```
-
-## Adding New Tests
-
-When adding new tests:
-
-1. Follow the existing structure, putting tests in the directory matching the module being tested
-2. Use the `pytest` fixtures from `conftest.py` for common test data
-3. Use clear, descriptive test names that indicate what is being tested
-4. Include docstrings for each test function explaining what is being tested

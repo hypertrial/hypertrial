@@ -1,22 +1,27 @@
-# Hypertrial: Bitcoin Dollar-Cost Averaging (DCA) Backtest
+# Hypertrial: Bitcoin Dollar-Cost Averaging (DCA) Tournament
 
-A Python-based backtesting framework for evaluating Bitcoin DCA strategy performance across multiple market cycles.
+A Bitcoin DCA strategy competition platform for evaluating and comparing participant-submitted algorithms.
 
-## Overview
+## Tournament Overview
 
-Hypertrial implements and tests various Bitcoin DCA strategies including a threshold-based dynamic approach that outperforms traditional uniform DCA by strategically adjusting purchase weights based on price deviations from the 200-day moving average.
+Hypertrial hosts a Bitcoin DCA strategy tournament where participants submit their custom strategies to compete for the highest performance. Your strategy will be evaluated using Sats Per Dollar (SPD) metrics across multiple Bitcoin market cycles, allowing for objective comparison against other participants.
 
-The framework measures performance using Sats Per Dollar (SPD) across 4-year Bitcoin market cycles, allowing for objective comparison between different strategies.
+As a tournament participant, your task is to develop and submit a custom DCA strategy that outperforms traditional approaches by strategically adjusting purchase weights based on market conditions.
+
+## How to Participate
+
+1. **Clone this repository** to your local machine
+2. **Create your strategy** in the `submit_strategies` directory
+3. **Test your strategy** against our test suite
+4. **Submit your strategy** for official tournament evaluation
 
 ## Features
 
-- **Pluggable Strategy System**: Easily create and test custom DCA strategies
-- **Data Collection**: Automatically retrieves and stores historical Bitcoin price data
-- **Dynamic DCA Strategy**: Implements a 200-day MA threshold strategy with customizable parameters
-- **Performance Metrics**: Calculates and compares SPD for both uniform DCA and dynamic strategies
-- **Visualization**: Generates detailed plots showing strategy performance over time
-- **Cycle Analysis**: Groups results by Bitcoin's characteristic 4-year cycles
-- **Batch Processing**: Run all strategies at once and compare results in CSV format
+- **External Strategy Submissions**: Add your strategy to the `submit_strategies` directory
+- **Automated Testing**: Verify your strategy works with our test suite
+- **Performance Metrics**: Compare your strategy against others using SPD metrics
+- **Cross-Cycle Analysis**: See how your strategy performs across different Bitcoin market cycles
+- **Equal Evaluation**: All strategies tested against the same historical data
 
 ## Getting Started
 
@@ -28,233 +33,145 @@ The framework measures performance using Sats Per Dollar (SPD) across 4-year Bit
   - numpy
   - matplotlib
   - coinmetrics-api-client (2024.2.6.16+)
+  - pytest (for running tests)
 
 ### Installation
 
-Option 1: Install from PyPI (recommended)
-
-```bash
-pip install hypertrial
-```
-
-Option 2: Install from source
-
 ```bash
 git clone https://github.com/mattfaltyn/hypertrial.git
 cd hypertrial
-pip install .
+pip install -e .  # Install in development mode
 ```
 
-Option 3: Install in development mode (changes to code are immediately reflected)
+### Tournament Submission Process
 
-```bash
-git clone https://github.com/mattfaltyn/hypertrial.git
-cd hypertrial
-pip install -e .
-```
+1. Look at the example strategy in `submit_strategies/dynamic_dca_50ma.py`
+2. Create a new Python file in the `submit_strategies` directory
+3. Copy the template from `submit_strategies/strategy_template.py`
+4. Implement your strategy following the provided structure
+5. Test your strategy using the commands below
 
-Option 4: Install dependencies only (without installing the package)
+For detailed submission instructions, see [submit_strategies/STRATEGIES.md](submit_strategies/STRATEGIES.md).
 
-```bash
-git clone https://github.com/mattfaltyn/hypertrial.git
-cd hypertrial
-pip install -r requirements.txt
-```
+### Verifying Your Submission
 
-### Usage
-
-1. Extract the Bitcoin price data (one-time setup):
+1. Ensure your data is set up correctly:
 
 ```bash
 python -m core.data.extract_data
 ```
 
-2. Run the default strategy backtest:
+2. Test your strategy specifically:
 
 ```bash
-python -m core.main
+python -m core.main --strategy your_strategy_name
 ```
 
-After installation, you can also use the command-line interface:
+3. Run automated tests to verify your strategy meets all requirements:
 
 ```bash
-hypertrial  # Run with default options
+pytest tests/test_submit_strategies.py
 ```
 
-3. Run with a specific strategy:
-
-```bash
-python -m core.main --strategy uniform_dca
-# OR
-hypertrial --strategy uniform_dca
-```
-
-4. List all available strategies:
-
-```bash
-python -m core.main --list
-# OR
-hypertrial --list
-```
-
-5. Run without generating plots (numeric results only):
-
-```bash
-python -m core.main --no-plots
-# OR
-hypertrial --no-plots
-```
-
-6. Backtest all strategies at once and save results to CSV:
-
-```bash
-python -m core.main --backtest-all
-# OR
-hypertrial --backtest-all
-```
-
-7. Customize the output directory:
-
-```bash
-python -m core.main --backtest-all --output-dir my_results
-# OR
-hypertrial --backtest-all --output-dir my_results
-```
-
-8. Command-line options can be combined:
-
-```bash
-python -m core.main --strategy uniform_dca --no-plots
-# OR
-hypertrial --strategy uniform_dca --no-plots
-```
-
-## Complete Workflow
-
-Here's the complete workflow from creating a custom strategy to running a backtest:
-
-### 1. Data Extraction
-
-First, extract and prepare the Bitcoin price data:
-
-```bash
-python -m core.data.extract_data
-```
-
-This will:
-
-- Fetch Bitcoin price data from CoinMetrics API
-- Clean and validate the data
-- Save it as a CSV file in the `core/data/` directory
-
-### 2. Strategy Creation
-
-Create a new strategy file in the `core/strategies/` directory:
-
-```bash
-touch core/strategies/my_custom_strategy.py
-```
-
-Implement your strategy following this template:
-
-```python
-# my_custom_strategy.py
-import pandas as pd
-from core.strategies import register_strategy
-
-@register_strategy("my_custom_strategy")
-def my_custom_strategy(df):
-    """
-    My custom DCA strategy.
-
-    This strategy implements [brief description of your strategy logic].
-
-    Args:
-        df (pandas.DataFrame): Price data with datetime index
-
-    Returns:
-        pandas.Series: Weight for each date, indexed by date
-    """
-    # Your strategy logic here
-    # Example: Create weights based on some calculation
-    weights = pd.Series(1.0, index=df.index)  # Default uniform weight
-
-    # Apply your custom logic to modify weights
-    # Example: Increase weights when price is below a threshold
-
-    return weights
-```
-
-### 3. Backtesting
-
-Run a backtest with your custom strategy:
-
-```bash
-python -m core.main --strategy my_custom_strategy
-```
-
-This will:
-
-- Load the Bitcoin price data
-- Apply your strategy to generate purchase weights
-- Calculate the SPD (Sats Per Dollar) performance
-- Generate performance plots
-- Show summary statistics for your strategy
-
-### 4. Compare Strategies
-
-To compare your strategy against other strategies:
+4. Compare your strategy against baseline strategies:
 
 ```bash
 python -m core.main --backtest-all --output-dir results
 ```
 
-This creates:
+## Complete Submission Workflow
 
-- A CSV file with performance metrics for all strategies
-- Performance plots for each strategy
-- A summary report that ranks the strategies
+### 1. Clone the Repository
 
-### 5. Refine Strategy
+```bash
+git clone https://github.com/mattfaltyn/hypertrial.git
+cd hypertrial
+pip install -e .  # Install in development mode
+```
 
-Based on the backtest results:
+### 2. Prepare the Data
 
-1. Analyze the performance metrics
-2. Identify areas for improvement
-3. Modify your strategy code
-4. Run the backtest again to see if performance improves
+Extract and prepare the Bitcoin price data:
 
-### 6. Implement in Production
+```bash
+python -m core.data.extract_data
+```
 
-Once satisfied with your strategy's performance:
+### 3. Create Your Strategy
 
-1. Export the strategy parameters
-2. Implement the strategy in your Bitcoin purchasing system
-3. Schedule regular purchases according to the strategy's recommendations
+Create a new file in the `submit_strategies` directory:
+
+```bash
+cp submit_strategies/strategy_template.py submit_strategies/my__strategy.py
+```
+
+Edit your strategy file following the template structure. Be sure to:
+
+- Implement the `construct_features` and `compute_weights` methods
+- Register your strategy with a unique name using `@register_strategy`
+- Document your strategy approach in the class docstring
+
+### 4. Verify Your Strategy
+
+Run the test suite to ensure your strategy meets all tournament requirements:
+
+```bash
+pytest tests/test_submit_strategies.py
+```
+
+### 5. Test Your Strategy's Performance
+
+Evaluate how your strategy performs:
+
+```bash
+python -m core.main --strategy my_strategy
+```
+
+### 6. Compare Against Other Strategies
+
+See how your strategy ranks against baseline strategies:
+
+```bash
+python -m core.main --backtest-all --output-dir results
+```
+
+### 7. Submit Your Strategy
+
+For the tournament:
+
+1. Fork the repository
+2. Add your strategy to the `submit_strategies` directory
+3. Run tests to verify it works correctly
+4. Submit a pull request with ONLY your strategy file in the `submit_strategies` directory
 
 ## Project Structure
 
-- `core/main.py`: Entry point that orchestrates the backtest process
-- `core/data.py`: Handles data loading from local CSV (with fallback to CoinMetrics API)
-- `core/data/extract_data.py`: Script to fetch and cache Bitcoin price data
-- `core/strategies/`: Directory containing all available DCA strategies
-- `core/spd.py`: Contains SPD (Sats Per Dollar) calculation logic
-- `core/plots.py`: Visualization functions for strategy performance
-- `core/config.py`: Configuration parameters for the backtest
+- `core/`: Core framework code (not to be modified by participants)
+  - `main.py`: Evaluation system that runs the backtests
+  - `data.py`: Data loading system
+  - `strategies/`: Built-in baseline strategies for comparison
+  - `spd.py`: Contains SPD (Sats Per Dollar) calculation logic
+  - `plots.py`: Visualization functions for strategy performance
+  - `config.py`: Configuration parameters for the backtest
+- `submit_strategies/`: **Directory for tournament submissions**
+  - `strategy_template.py`: Template to use for your submission
+  - `STRATEGIES.md`: Detailed tournament submission instructions
+- `tests/`: Test suite
+  - `test_submit_strategies.py`: Tests to verify your submission
 - `results/`: Directory where strategy comparison results are stored
 
-## Creating Your Own Strategies
+## Tournament Rules and Guidelines
 
-1. Copy `core/strategies/strategy_template.py` to a new file with a descriptive name
-2. Implement your strategy by extending the StrategyTemplate class
-3. Register your strategy with a unique name using the decorator
-4. Run your strategy with `python -m core.main --strategy your_strategy_name`
-
-See `core/strategies/README.md` for detailed instructions.
+1. Your strategy must be implemented in a single Python file within `submit_strategies/`
+2. You may not modify any code in the `core/` directory
+3. Your strategy must pass all tests in `tests/test_submit_strategies.py`
+4. Your strategy should be appropriately documented
+5. External data sources are allowed, but your strategy must fit the structure in `strategy_template.py`
+6. Strategies will be ranked by their mean excess SPD percentile compared to uniform DCA
 
 ## Configuration
 
-Key parameters in `config.py`:
+Key parameters in `config.py` (DO NOT MODIFY):
 
 - `BACKTEST_START`: Start date for backtest (default: '2013-01-01')
 - `BACKTEST_END`: End date for backtest (default: '2024-12-31')
