@@ -12,6 +12,13 @@ ALLOWED_OS_FUNCTIONS = {
     'os.path.join', 'os.path.exists'
 }
 
+# Explicitly banned modules (will be checked in addition to not being in ALLOWED_MODULES)
+BANNED_MODULES = {
+    'requests', 'urllib', 'http', 'socket', 'subprocess', 
+    'multiprocessing', 'threading', 'asyncio', 'concurrent',
+    'ctypes', 'pickle', 'marshal', 'shelve'
+}
+
 # Allowed external data sources (domain whitelist)
 ALLOWED_DATA_SOURCES = {
     'api.coinmetrics.io',  # CoinMetrics API
@@ -132,8 +139,10 @@ BANDIT_CONF = {
         
         # Banned imports - these should never be used in strategies
         'banned_imports': [
-            'subprocess', 'socket', 'pickle', 'marshal', 'shelve',
-            'multiprocessing', 'ctypes', 'threading', 'asyncio'
+            'requests', 'urllib', 'http', 'socket',
+            'subprocess', 'pickle', 'marshal', 'shelve',
+            'multiprocessing', 'ctypes', 'threading', 'asyncio',
+            'concurrent'
         ]
     }
 } 

@@ -18,7 +18,7 @@ from core.security.data_flow_analyzer import DataFlowAnalyzer
 from core.security.strategy_security import StrategySecurity
 from core.security.bandit_analyzer import BanditAnalyzer
 from core.security.config import (
-    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES,
+    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES, BANNED_MODULES,
     MAX_MEMORY_MB, MAX_CPU_TIME, MAX_EXECUTION_TIME, 
     MAX_CYCLOMATIC_COMPLEXITY, MAX_NESTED_DEPTH, MAX_FUNCTION_COMPLEXITY,
     MAX_MODULE_COMPLEXITY, TEST_MAX_CPU_TIME, TEST_MAX_EXECUTION_TIME

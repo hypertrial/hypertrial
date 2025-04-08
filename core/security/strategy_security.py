@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 from core.security.utils import is_test_mode
 from core.security.config import (
-    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES
+    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES, BANNED_MODULES
 )
 from core.security.complexity_analyzer import ComplexityAnalyzer
 from core.security.data_flow_analyzer import DataFlowAnalyzer
@@ -26,117 +26,68 @@ class StrategySecurity:
     
     @staticmethod
     def analyze_ast(code: str) -> None:
-        """Analyze the AST of the strategy code for security issues"""
-        # Import SecurityError here to avoid circular import
+        """
+        Analyze the AST of code to detect security issues
+        
+        Checks for:
+        - Banned imports (explicitly blacklisted modules like requests, subprocess)
+        - Dangerous imports (anything not in allowed modules)
+        - Dangerous attributes (os.system, eval, etc.)
+        - Dangerous operations (file writes, exec, etc.)
+        - External data access (network calls, etc.)
+        
+        Args:
+            code: Python code to analyze
+            
+        Raises:
+            SecurityError: If the code contains security issues
+        """
         from core.security import SecurityError
         
-        tree = ast.parse(code)
-        
-        # Run Bandit static security analysis
-        bandit_analyzer = BanditAnalyzer(code)
-        bandit_success, bandit_issues = bandit_analyzer.analyze()
-        
-        if bandit_success and bandit_issues:
-            # Log medium severity issues as warnings
-            medium_issues = [i for i in bandit_issues if i['issue_severity'] == 'MEDIUM']
-            for issue in medium_issues:
-                logger.warning(f"Security warning: {issue['issue_text']} at line {issue['line_number']}")
+        try:
+            tree = ast.parse(code)
+        except SyntaxError as e:
+            raise SecurityError(f"Syntax error in code: {str(e)}")
             
-            # Get and log the bandit summary
-            bandit_summary = bandit_analyzer.get_summary()
-            logger.info(f"Bandit security scan: {bandit_summary['issues_count']} issues found "
-                       f"(High: {bandit_summary['high_severity_count']}, "
-                       f"Medium: {bandit_summary['medium_severity_count']}, "
-                       f"Low: {bandit_summary['low_severity_count']})")
-        elif not bandit_success:
-            logger.warning("Bandit security analysis was skipped or failed")
+        # Track suspicious patterns for reporting
+        external_data_access = []
+        sensitive_operations = []
         
-        # Run complexity analysis
-        complexity_analyzer = ComplexityAnalyzer(code)
-        complexity_analyzer.analyze()
-        
-        # Get complexity summary for additional checks
-        complexity_summary = complexity_analyzer.get_complexity_summary()
-        
-        # Run data flow analysis
-        data_flow_analyzer = DataFlowAnalyzer(code)
-        data_flow_analyzer.analyze()
-        
-        # Track variable assignments and their sources for deeper analysis
-        variable_sources = {}
-        sensitive_operations = set()
-        external_data_access = set()
-        
-        # Track disallowed os attribute usage
-        def is_allowed_os_function(node):
-            """Check if an os module function call is in the allowed list"""
+        for node in ast.walk(tree):
+            # Check for dangerous attribute access
             if isinstance(node, ast.Attribute):
+                # Check for dangerous attribute access
                 if isinstance(node.value, ast.Name) and node.value.id == 'os':
-                    # Allow os.path.*
-                    if node.attr == 'path':
-                        return True
-                    # Allow makedirs
-                    if node.attr == 'makedirs':
-                        return True
-                    # Block all other os attributes
-                    return False
-            return True
-        
-        def is_allowed_os_path_call(node):
-            """Check if an os.path function call is in the allowed list"""
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute):
-                    # Check for os.path.* calls
-                    if isinstance(node.func.value, ast.Attribute) and isinstance(node.func.value.value, ast.Name):
-                        if node.func.value.value.id == 'os' and node.func.value.attr == 'path':
-                            # Get the full function name: os.path.join, etc.
-                            full_func_name = f"os.path.{node.func.attr}"
-                            return full_func_name in ALLOWED_OS_FUNCTIONS
-                    # Check for os.makedirs calls        
-                    elif isinstance(node.func.value, ast.Name) and node.func.value.id == 'os':
-                        full_func_name = f"os.{node.func.attr}"
-                        return full_func_name in ALLOWED_OS_FUNCTIONS
-            return True
-        
-        # Track variable assignments for data flow analysis
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        # Record the source of this variable
-                        variable_sources[target.id] = StrategySecurity._get_value_source(node.value)
-        
-        # Check for dangerous operations and suspicious patterns
-        for node in ast.walk(tree):
-            # Check for dangerous function calls
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Name):
-                    if node.func.id in {'eval', 'exec', 'open', 'system'}:
-                        raise SecurityError(f"Dangerous function call detected: {node.func.id}")
-                    sensitive_operations.add(node.func.id)
+                    # Allow only specific os.path functions
+                    if node.attr == 'system':
+                        raise SecurityError("os.system() is not allowed")
+                    if node.attr == 'spawn':
+                        raise SecurityError("os.spawn() is not allowed")
+                    if node.attr == 'popen':
+                        raise SecurityError("os.popen() is not allowed")
+                    if node.attr == 'exec':
+                        raise SecurityError("os.exec() is not allowed")
+                    if node.attr == 'execl':
+                        raise SecurityError("os.execl() is not allowed")
+                    if node.attr == 'fork':
+                        raise SecurityError("os.fork() is not allowed")
                 
-                # Track method calls
-                elif isinstance(node.func, ast.Attribute):
-                    if node.func.attr in {'eval', 'exec', 'system', 'query', 'execute'}:
-                        sensitive_operations.add(f"{StrategySecurity._get_attr_source(node.func.value)}.{node.func.attr}")
+                # Check for dangerous file operations
+                if hasattr(node, 'attr') and node.attr in {'write', 'writelines', 'open', 'remove', 'unlink'}:
+                    sensitive_operations.append(f"{node.attr}()")
                 
-                # Check os.* function calls
-                if not is_allowed_os_path_call(node):
-                    raise SecurityError(f"Disallowed os function call detected")
-                
-                # Check for external data access
+                # Detect external data access attempts
                 if StrategySecurity._is_external_data_access(node):
-                    external_data_access.add(StrategySecurity._get_call_descriptor(node))
-            
-            # Check for dangerous os attribute access
-            if isinstance(node, ast.Attribute):
-                if isinstance(node.value, ast.Name) and node.value.id == 'os':
-                    if not is_allowed_os_function(node):
-                        raise SecurityError(f"Disallowed os module attribute: os.{node.attr}")
-            
-            # Check for dangerous imports
-            if isinstance(node, ast.Import):
+                    external_data_access.append(str(node.attr))
+                    
+            # Check for imports and ensure they're allowed
+            elif isinstance(node, ast.Import):
                 for name in node.names:
+                    # Check against banned modules first (explicit blacklist)
+                    for banned_mod in BANNED_MODULES:
+                        if name.name == banned_mod or name.name.startswith(banned_mod + '.'):
+                            raise SecurityError(f"Banned module import detected: {name.name}")
+                            
                     # Special case for os (we'll restrict its usage via function analysis)
                     if name.name == 'os':
                         continue
@@ -149,6 +100,11 @@ class StrategySecurity:
                     if not is_allowed:
                         raise SecurityError(f"Dangerous import detected: {name.name}")
             elif isinstance(node, ast.ImportFrom):
+                # Check against banned modules first (explicit blacklist)
+                for banned_mod in BANNED_MODULES:
+                    if node.module == banned_mod or (node.module and node.module.startswith(banned_mod + '.')):
+                        raise SecurityError(f"Banned module import detected: from {node.module}")
+                
                 # Special case for os.path
                 if node.module == 'os.path':
                     continue

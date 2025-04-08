@@ -94,6 +94,46 @@ def your_name_strategy(df):
     return YourNameStrategy.get_strategy_function()(df)
 ```
 
+## External Data Access
+
+Strategies are allowed to access external data only through `pandas_datareader`. Direct network requests using libraries like `requests` or `urllib` are strictly prohibited for security reasons.
+
+### Permitted External Data Access
+
+1. **Use pandas_datareader (preferred method)**
+
+   ```python
+   import pandas_datareader as web
+
+   # Example: Getting gold price data from Yahoo Finance
+   gold_data = web.DataReader('GC=F', 'yahoo', start='2020-01-01', end='2021-01-01')
+   ```
+
+2. **Access is domain-restricted**
+   Only the following domains are allowed:
+   - api.coinmetrics.io (CoinMetrics API)
+   - query1.finance.yahoo.com (Yahoo Finance)
+   - api.coingecko.com (CoinGecko)
+   - finance.yahoo.com (Yahoo Finance)
+   - data.nasdaq.com (Nasdaq Data Link)
+
+### Prohibited Network Access Methods
+
+The following methods of network access are strictly forbidden:
+
+1. **Direct HTTP requests**
+
+   - requests library (`import requests`)
+   - urllib module (`import urllib`)
+   - http.client (`import http`)
+   - socket module (`import socket`)
+
+2. **Custom network implementations**
+   - Creating custom socket connections
+   - Using any third-party HTTP clients not listed in allowed modules
+
+Attempts to use these libraries will result in immediate rejection of your strategy.
+
 ## External Data Sources
 
 You may use external data sources in your strategy, but:

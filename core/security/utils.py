@@ -114,6 +114,10 @@ def validate_strategy_file(file_path: str) -> None:
             r'import\s+socket',                # Importing socket
             r'import\s+pickle',                # Importing pickle
             r'import\s+marshal',               # Importing marshal
+            r'import\s+requests',              # Importing requests
+            r'requests\.',                     # Using requests library
+            r'urllib\.',                       # Using urllib
+            r'http\.',                         # Using http client
             r'__import__\s*\(',                # Using __import__
             r'getattr\s*\(.+?,\s*[\'"]__',     # Accessing dunder methods
             r'globals\(\)',                    # Accessing globals
@@ -121,14 +125,19 @@ def validate_strategy_file(file_path: str) -> None:
             r'compile\s*\(',                   # Code compilation
             r'code\s*\..+?exec',               # code module exec
             r'importlib',                      # importlib
-            r'open\s*\(.+?,\s*[\'"]w',         # Opening files for writing
-            r'with\s+open\s*\(.+?,\s*[\'"][wa+]', # with open for writing/appending
+            r'open\s*\(',                      # Opening files (any mode)
+            r'with\s+open\s*\(',               # With open (any mode)
             r'\.write\s*\(',                   # Any write method
             r'\.writelines\s*\(',              # Any writelines method
             r'io\.',                           # io module
-            r'pathlib\..*?\.write',            # pathlib writing
+            r'pathlib\.',                      # pathlib module
             r'os\.makedirs',                   # Creating directories
             r'os\.mkdir',                      # Creating a directory
+            r'os\.path\.abspath',              # Getting absolute path
+            r'os\.path\.dirname',              # Getting directory name
+            r'os\.path\.isfile',               # Checking if path is a file
+            r'os\.path\.isdir',                # Checking if path is a directory
+            r'os\.path\.getsize',              # Getting file size
             r'shutil\.',                       # File operations
             r'os\.path\.expanduser\(',         # Getting user directory
             r'os\.environ',                    # Accessing environment variables
