@@ -9,9 +9,7 @@ ALLOWED_MODULES = {
 
 # Allow specific os.path functions only
 ALLOWED_OS_FUNCTIONS = {
-    'os.path.join', 'os.path.exists', 'os.path.abspath', 
-    'os.path.dirname', 'os.path.isfile',
-    'os.path.isdir', 'os.path.getsize'
+    'os.path.join', 'os.path.exists'
 }
 
 # Allowed external data sources (domain whitelist)
