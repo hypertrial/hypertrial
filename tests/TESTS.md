@@ -12,11 +12,80 @@ The tests are organized according to the module structure of the codebase:
   - `test_uniform_strategy.py`: Tests for the Uniform DCA strategy
   - `test_dynamic_strategy.py`: Tests for the Dynamic DCA strategy
 - `core/`: Tests for core modules
+  - `test_data_validation.py`: Tests for validating Bitcoin price data
+  - `test_data_formats.py`: Tests for handling different data formats
+  - `test_error_handling.py`: Tests for API and data error handling
+  - `test_config.py`: Tests for configuration handling
   - `test_spd_calculation.py`: Tests for SPD calculation functions
   - `test_spd_integration.py`: Tests for strategy integration with SPD calculations
   - `test_spd_advanced.py`: Tests for advanced SPD functionality and edge cases
   - `test_performance_benchmarks.py`: Tests for backtest performance benchmarking
   - `test_strategy_performance.py`: Tests for measuring strategy implementation performance
+
+### Data Validation Tests
+
+The `test_data_validation.py` file contains tests that focus on validating Bitcoin price data:
+
+- **Basic Validation Tests**:
+
+  - Test validation of valid data
+  - Test handling of missing required columns
+  - Test handling of invalid price values (negative, zero, NaN, infinity)
+
+- **Data Cleaning Tests**:
+
+  - Test cleaning of data with missing values
+  - Test handling of duplicate dates
+  - Test handling of data gaps
+  - Test fixing of corrupted values
+
+- **Date Range Tests**:
+  - Test validation of minimum date range
+  - Test handling of duplicate dates
+  - Test validation of date gaps
+
+### Data Format Tests
+
+The `test_data_formats.py` file contains tests for handling different data formats:
+
+- **CSV Format Tests**:
+
+  - Test loading comma-separated files
+  - Test loading semicolon-separated files
+  - Test loading tab-separated files
+
+- **Date Format Tests**:
+
+  - Test ISO format (YYYY-MM-DD)
+  - Test US format (MM/DD/YYYY)
+  - Test European format (DD/MM/YYYY)
+  - Test different date separators
+
+- **Column Name Tests**:
+
+  - Test standard "btc_close" column
+  - Test alternative names like "Price", "Close", "BTC-USD"
+
+- **Data Source Tests**:
+  - Test JSON to DataFrame conversion
+  - Test CoinMetrics API format handling
+
+### Error Handling Tests
+
+The `test_error_handling.py` file contains tests for API and data error handling:
+
+- **API Error Tests**:
+
+  - Test handling of API connection errors
+  - Test handling of API timeout errors
+  - Test handling of malformed JSON responses
+
+- **Data Error Tests**:
+  - Test handling of malformed CSV files
+  - Test handling of empty data
+  - Test handling of invalid date formats
+  - Test handling of extreme price values
+  - Test handling of corrupted data
 
 ### SPD Integration Tests
 
@@ -121,13 +190,13 @@ pytest
 To run a specific test module:
 
 ```bash
-pytest tests/core/test_spd_calculation.py
+pytest tests/core/test_data_validation.py
 ```
 
 To run a specific test function:
 
 ```bash
-pytest tests/core/test_spd_calculation.py::test_spd_calculation_with_uniform_weights
+pytest tests/core/test_data_validation.py::test_validate_price_data_basic
 ```
 
 ## Test Coverage

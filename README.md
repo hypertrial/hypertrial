@@ -129,6 +129,109 @@ python -m core.main --strategy uniform_dca --no-plots
 hypertrial --strategy uniform_dca --no-plots
 ```
 
+## Complete Workflow
+
+Here's the complete workflow from creating a custom strategy to running a backtest:
+
+### 1. Data Extraction
+
+First, extract and prepare the Bitcoin price data:
+
+```bash
+python -m core.data.extract_data
+```
+
+This will:
+
+- Fetch Bitcoin price data from CoinMetrics API
+- Clean and validate the data
+- Save it as a CSV file in the `core/data/` directory
+
+### 2. Strategy Creation
+
+Create a new strategy file in the `core/strategies/` directory:
+
+```bash
+touch core/strategies/my_custom_strategy.py
+```
+
+Implement your strategy following this template:
+
+```python
+# my_custom_strategy.py
+import pandas as pd
+from core.strategies import register_strategy
+
+@register_strategy("my_custom_strategy")
+def my_custom_strategy(df):
+    """
+    My custom DCA strategy.
+
+    This strategy implements [brief description of your strategy logic].
+
+    Args:
+        df (pandas.DataFrame): Price data with datetime index
+
+    Returns:
+        pandas.Series: Weight for each date, indexed by date
+    """
+    # Your strategy logic here
+    # Example: Create weights based on some calculation
+    weights = pd.Series(1.0, index=df.index)  # Default uniform weight
+
+    # Apply your custom logic to modify weights
+    # Example: Increase weights when price is below a threshold
+
+    return weights
+```
+
+### 3. Backtesting
+
+Run a backtest with your custom strategy:
+
+```bash
+python -m core.main --strategy my_custom_strategy
+```
+
+This will:
+
+- Load the Bitcoin price data
+- Apply your strategy to generate purchase weights
+- Calculate the SPD (Sats Per Dollar) performance
+- Generate performance plots
+- Show summary statistics for your strategy
+
+### 4. Compare Strategies
+
+To compare your strategy against other strategies:
+
+```bash
+python -m core.main --backtest-all --output-dir results
+```
+
+This creates:
+
+- A CSV file with performance metrics for all strategies
+- Performance plots for each strategy
+- A summary report that ranks the strategies
+
+### 5. Refine Strategy
+
+Based on the backtest results:
+
+1. Analyze the performance metrics
+2. Identify areas for improvement
+3. Modify your strategy code
+4. Run the backtest again to see if performance improves
+
+### 6. Implement in Production
+
+Once satisfied with your strategy's performance:
+
+1. Export the strategy parameters
+2. Implement the strategy in your Bitcoin purchasing system
+3. Schedule regular purchases according to the strategy's recommendations
+
 ## Project Structure
 
 - `core/main.py`: Entry point that orchestrates the backtest process
