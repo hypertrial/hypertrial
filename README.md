@@ -37,6 +37,23 @@ As a tournament participant, your task is to develop and submit a custom DCA str
 
 ### Installation
 
+**Recommended: Use a Virtual Environment**
+
+It's strongly recommended to use a virtual environment to avoid dependency conflicts:
+
+```bash
+# Create a virtual environment
+python -m venv hypertrial_venv
+
+# Activate the virtual environment
+# On Windows:
+hypertrial_venv\Scripts\activate
+# On macOS/Linux:
+source hypertrial_venv/bin/activate
+```
+
+Once the virtual environment is activated, install the project:
+
 ```bash
 git clone https://github.com/mattfaltyn/hypertrial.git
 cd hypertrial
@@ -81,12 +98,24 @@ python -m core.main --backtest-all --output-dir results
 
 ## Complete Submission Workflow
 
-### 1. Clone the Repository
+### 1. Clone the Repository and Set Up Environment
 
 ```bash
+# Clone the repository
 git clone https://github.com/mattfaltyn/hypertrial.git
 cd hypertrial
-pip install -e .  # Install in development mode
+
+# Create a virtual environment
+python -m venv hypertrial_venv
+
+# Activate the virtual environment
+# On Windows:
+hypertrial_venv\Scripts\activate
+# On macOS/Linux:
+source hypertrial_venv/bin/activate
+
+# Install in development mode
+pip install -e .
 ```
 
 ### 2. Prepare the Data
