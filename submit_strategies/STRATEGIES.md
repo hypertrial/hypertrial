@@ -276,24 +276,69 @@ Consider these approaches for your tournament strategy:
 
 The tournament framework enforces strict security checks to ensure all submissions are safe. Strategies with any high or medium severity security issues will be automatically blocked from execution.
 
-### Security Constraints
+## Security Restrictions
 
-- No dangerous functions like `eval()`, `exec()`, or `os.system()`
-- No subprocess invocations or shell commands
-- No hardcoded credentials or sensitive information
-- No unsafe use of cryptographic functions
-- No unsafe deserialization (e.g., `yaml.load` without safe mode)
-- No dangerous exception handling patterns (e.g., bare try-except blocks)
+To maintain a secure and fair environment, the following restrictions apply to all strategies:
 
-### Security Verification
+### Filesystem Restrictions
 
-Your submission is analyzed using Bandit, a security linter for Python code. To check if your strategy passes security verification:
+- **No file writing operations** - Strategies cannot write to the filesystem
+- **No file reading operations** except through pandas functions
+- **No temporary file operations** - The `tempfile` module is blocked
+- **Limited OS operations** - Only `os.path.join` and `os.path.exists` are allowed
 
-```bash
-pytest tests/test_security.py -v
-```
+### Network Restrictions
 
-If you receive errors about security issues, you'll need to fix them before your strategy can be accepted. The error messages include details about the specific issues found, including the severity level, issue ID, and line number.
+- **Limited external data access** - Only `pandas_datareader` is allowed
+- **No direct HTTP requests** - The `requests` library is blocked
+- **No socket operations** - The `socket` module is blocked
+
+### Pandas Operations
+
+- **No DataFrame output methods** - Methods that write data are blocked:
+
+  - `to_csv()`
+  - `to_pickle()`
+  - `to_json()`
+  - `to_excel()`
+  - `to_feather()`
+  - Any other `to_*()` method
+
+- **Allowed pandas_datareader functions** - Only these functions are permitted:
+  - `DataReader`
+  - `get_data_yahoo`
+  - `get_data_fred`
+  - `get_data_stooq`
+  - `get_data_alpha_vantage`
+  - `get_data_naver`
+  - `get_nasdaq_symbols`
+  - `get_iex_symbols`
+  - `get_tiingo_symbols`
+
+### Serialization Restrictions
+
+- **No serialization** - The following operations are blocked:
+  - `pickle.dump` / `pickle.dumps`
+  - `json.dump` / `json.dumps` (when writing to files)
+  - `marshal.dump` / `marshal.dumps`
+  - `shelve.open`
+
+### Code Generation Restrictions
+
+- **No code generation or evaluation** - These operations are blocked:
+  - `eval()` / `exec()`
+  - `ast.parse` / `ast.unparse`
+  - `compile()`
+  - `importlib` functions
+
+### System Operations
+
+- **No system access** - The following are blocked:
+  - `subprocess` module and all subprocesses
+  - `os.system()` and similar commands
+  - `sys` module access
+
+These restrictions ensure that strategies operate in a fair, secure, and deterministic environment. Any attempt to circumvent these restrictions will result in immediate rejection of your strategy.
 
 ## Tournament Judging Criteria
 

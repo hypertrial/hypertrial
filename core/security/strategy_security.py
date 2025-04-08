@@ -9,7 +9,8 @@ from urllib.parse import urlparse
 
 from core.security.utils import is_test_mode
 from core.security.config import (
-    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES, BANNED_MODULES
+    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES, BANNED_MODULES,
+    ALLOWED_PANDAS_DATAREADER
 )
 from core.security.complexity_analyzer import ComplexityAnalyzer
 from core.security.data_flow_analyzer import DataFlowAnalyzer
@@ -35,6 +36,8 @@ class StrategySecurity:
         - Dangerous attributes (os.system, eval, etc.)
         - Dangerous operations (file writes, exec, etc.)
         - External data access (network calls, etc.)
+        - DataFrame write operations
+        - pandas_datareader function whitelist
         
         Args:
             code: Python code to analyze
@@ -54,6 +57,34 @@ class StrategySecurity:
         sensitive_operations = []
         
         for node in ast.walk(tree):
+            # Check for DataFrame write operations
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                # If this is a method call
+                method_name = node.func.attr
+                
+                # Check for DataFrame write operations
+                if method_name.startswith('to_'):
+                    # Allow certain essential DataFrame operations in test mode
+                    if is_test_mode() and method_name in {'to_csv', 'to_datetime', 'to_numpy', 'to_dict', 'to_records', 'to_series'}:
+                        # These operations are permitted in test mode
+                        pass
+                    else:
+                        # Block all DataFrame output operations in production
+                        raise SecurityError(f"DataFrame write operation detected: {method_name}()")
+                
+                # Check for pandas_datareader functions
+                if hasattr(node.func.value, 'id') and node.func.value.id == 'web':
+                    # Check for internal/private methods which should be blocked
+                    if method_name.startswith('_') or (
+                        hasattr(node.func.value, 'attr') and 
+                        node.func.value.attr is not None and 
+                        node.func.value.attr.startswith('_')
+                    ):
+                        raise SecurityError(f"Access to internal pandas_datareader methods not allowed: {method_name}")
+                    # If using pandas_datareader (web)
+                    elif method_name not in ALLOWED_PANDAS_DATAREADER:
+                        raise SecurityError(f"Unauthorized pandas_datareader function: web.{method_name}()")
+            
             # Check for dangerous attribute access
             if isinstance(node, ast.Attribute):
                 # Check for dangerous attribute access
@@ -281,3 +312,20 @@ class StrategySecurity:
                         logger.warning(f"- {warning}")
         
         return wrapper 
+
+    @staticmethod
+    def _is_pandas_datareader_access(node):
+        """Check if a node represents accessing pandas_datareader functions"""
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute) and hasattr(node.func.value, 'id'):
+                if node.func.value.id == 'web':
+                    return node.func.attr not in ALLOWED_PANDAS_DATAREADER
+        return False
+
+    @staticmethod
+    def _is_dataframe_write_operation(node):
+        """Check if a node represents a DataFrame write operation"""
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute):
+                return node.func.attr.startswith('to_')
+        return False 

@@ -575,10 +575,14 @@ def test_network_strategy(df):
             ("os.path.exists('test.txt')", False),  # Allowed
         ]
         
-        for pattern, should_fail in file_patterns:
-            # Create a temporary file with the pattern
-            with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
-                tmp.write(f"""
+        # Set a global environment variable to indicate security test
+        os.environ['SECURITY_TEST'] = 'file_writing'
+
+        try:
+            for pattern, should_fail in file_patterns:
+                # Create a temporary file with the pattern
+                with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
+                    tmp.write(f"""
 import os
 import pandas as pd
 import numpy as np
@@ -593,25 +597,31 @@ def test_file_strategy(df):
         pass
     return pd.Series(index=df.index, data=1.0)
 """.encode('utf-8'))
-                tmp_path = tmp.name
-            
-            try:
-                # Check if validation fails as expected
-                success = True
+                    tmp_path = tmp.name
+
                 try:
-                    validate_strategy_file(tmp_path)
-                except SecurityError:
-                    success = False
-                
-                # Verify the result matches expectations
-                if should_fail and success:
-                    self.fail(f"Dangerous file operation '{pattern}' was not detected")
-                elif not should_fail and not success:
-                    self.fail(f"Safe file operation '{pattern}' was incorrectly flagged")
-            finally:
-                # Clean up
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
+                    # Check if validation fails as expected
+                    success = True
+                    try:
+                        validate_strategy_file(tmp_path)
+                    except SecurityError:
+                        success = False
+
+                    # Verify the result matches expectations
+                    if should_fail and success:
+                        self.fail(f"Dangerous file operation '{pattern}' was not detected")
+                    elif not should_fail and not success:
+                        self.fail(f"Safe file operation '{pattern}' was incorrectly flagged")
+                finally:
+                    # Cleanup
+                    try:
+                        os.unlink(tmp_path)
+                    except:
+                        pass
+        finally:
+            # Clean up environment variable
+            if 'SECURITY_TEST' in os.environ:
+                del os.environ['SECURITY_TEST']
     
     def test_os_function_restrictions(self):
         """Test that only allowed OS functions can be used"""
@@ -622,10 +632,14 @@ def test_file_strategy(df):
             ("os.path.dirname('test.txt')", True),  # No longer allowed
         ]
         
-        for pattern, should_fail in os_patterns:
-            # Create a temporary file with the pattern
-            with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
-                tmp.write(f"""
+        # Set a global environment variable to indicate security test
+        os.environ['SECURITY_TEST'] = 'os_functions'
+        
+        try:
+            for pattern, should_fail in os_patterns:
+                # Create a temporary file with the pattern
+                with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
+                    tmp.write(f"""
 import os
 import pandas as pd
 import numpy as np
@@ -640,25 +654,31 @@ def test_os_strategy(df):
         pass
     return pd.Series(index=df.index, data=1.0)
 """.encode('utf-8'))
-                tmp_path = tmp.name
-            
-            try:
-                # Check if validation fails as expected
-                success = True
+                    tmp_path = tmp.name
+
                 try:
-                    validate_strategy_file(tmp_path)
-                except SecurityError:
-                    success = False
-                
-                # Verify the result matches expectations
-                if should_fail and success:
-                    self.fail(f"Dangerous OS function '{pattern}' was not detected")
-                elif not should_fail and not success:
-                    self.fail(f"Safe OS function '{pattern}' was incorrectly flagged")
-            finally:
-                # Clean up
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
+                    # Check if validation fails as expected
+                    success = True
+                    try:
+                        validate_strategy_file(tmp_path)
+                    except SecurityError:
+                        success = False
+
+                    # Verify the result matches expectations
+                    if should_fail and success:
+                        self.fail(f"Dangerous OS function '{pattern}' was not detected")
+                    elif not should_fail and not success:
+                        self.fail(f"Safe OS function '{pattern}' was incorrectly flagged")
+                finally:
+                    # Cleanup
+                    try:
+                        os.unlink(tmp_path)
+                    except:
+                        pass
+        finally:
+            # Clean up environment variable
+            if 'SECURITY_TEST' in os.environ:
+                del os.environ['SECURITY_TEST']
     
     def test_regex_pattern_detection(self):
         """Test regex pattern detection for dangerous code"""
@@ -745,6 +765,167 @@ def csv_reader_strategy(df):
         finally:
             # Clean up
             os.unlink(tmp_path)
+
+    def test_pandas_io_restrictions(self):
+        """Test that pandas I/O operations are blocked"""
+        # Test code with pandas I/O patterns
+        pandas_patterns = [
+            ("df.to_csv('output.csv')", True),
+            ("df.to_pickle('data.pkl')", True),
+            ("df.to_json('data.json')", True),
+            ("df.to_excel('data.xlsx')", True),
+            ("pd.DataFrame({'a': [1, 2]}).to_csv('out.csv')", True),
+            ("df['column'].mean()", False),  # Allowed computation
+            ("df.groupby('col').sum()", False),  # Allowed computation
+        ]
+        
+        # Set a global environment variable to indicate security test
+        os.environ['SECURITY_TEST'] = 'pandas_io'
+        
+        try:
+            for pattern, should_fail in pandas_patterns:
+                # Create a temporary file with the pattern
+                with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
+                    tmp.write(f"""
+import os
+import pandas as pd
+import numpy as np
+from core.strategies import register_strategy
+
+@register_strategy("test_pandas_strategy")
+def test_pandas_strategy(df):
+    # Test with pandas operation pattern
+    try:
+        result = {pattern}
+    except Exception:
+        pass
+    return pd.Series(index=df.index, data=1.0)
+""".encode('utf-8'))
+                    tmp_path = tmp.name
+
+                try:
+                    # Check if validation fails as expected
+                    success = True
+                    try:
+                        validate_strategy_file(tmp_path)
+                    except SecurityError:
+                        success = False
+
+                    # Verify the result matches expectations
+                    if should_fail and success:
+                        self.fail(f"Dangerous pandas operation '{pattern}' was not detected")
+                    elif not should_fail and not success:
+                        self.fail(f"Safe pandas operation '{pattern}' was incorrectly flagged")
+                finally:
+                    # Cleanup
+                    try:
+                        os.unlink(tmp_path)
+                    except:
+                        pass
+        finally:
+            # Clean up environment variable
+            if 'SECURITY_TEST' in os.environ:
+                del os.environ['SECURITY_TEST']
+
+    def test_pandas_datareader_whitelist(self):
+        """Test that only allowed pandas_datareader functions can be used"""
+        # Test code with pandas_datareader patterns
+        datareader_patterns = [
+            ("import pandas_datareader as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", False),  # Allowed
+            ("import pandas_datareader.data as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", False),  # Allowed
+            ("import pandas_datareader as web; web.get_data_yahoo('AAPL', '2020-01-01', '2021-01-01')", False),  # Allowed
+            ("import pandas_datareader as web; web.get_nasdaq_symbols()", False),  # Allowed
+            ("import pandas_datareader as web; web._utils.get_headers()", True),  # Not allowed
+            ("import pandas_datareader as web; web._DailyBaseReader('AAPL', 'yahoo')", True),  # Not allowed
+        ]
+        
+        for pattern, should_fail in datareader_patterns:
+            # Create a temporary file with the pattern
+            with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
+                tmp.write(f"""
+import os
+import pandas as pd
+import numpy as np
+from core.strategies import register_strategy
+
+@register_strategy("test_datareader_strategy")
+def test_datareader_strategy(df):
+    # Test with pandas_datareader operation pattern
+    try:
+        {pattern}
+    except Exception:
+        pass
+    return pd.Series(index=df.index, data=1.0)
+""".encode('utf-8'))
+                tmp_path = tmp.name
+            
+            try:
+                # Check if validation fails as expected
+                success = True
+                try:
+                    validate_strategy_file(tmp_path)
+                except SecurityError:
+                    success = False
+                
+                # Verify the result matches expectations
+                if should_fail and success:
+                    self.fail(f"Dangerous datareader operation '{pattern}' was not detected")
+                elif not should_fail and not success:
+                    self.fail(f"Safe datareader operation '{pattern}' was incorrectly flagged")
+            finally:
+                # Clean up
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+    def test_serialization_restrictions(self):
+        """Test that serialization operations are blocked"""
+        # Test code with serialization patterns
+        serialization_patterns = [
+            ("import pickle; pickle.dump(data, open('data.pkl', 'wb'))", True),
+            ("import pickle; pickle.dumps(data)", True),
+            ("import json; json.dump(data, open('data.json', 'w'))", True),
+            ("import marshal; marshal.dump(data, open('data.marshal', 'wb'))", True),
+            ("import pickle; pickle.load(open('data.pkl', 'rb'))", True),  # Even loading is blocked
+        ]
+        
+        for pattern, should_fail in serialization_patterns:
+            # Create a temporary file with the pattern
+            with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
+                tmp.write(f"""
+import os
+import pandas as pd
+import numpy as np
+from core.strategies import register_strategy
+
+@register_strategy("test_serialization_strategy")
+def test_serialization_strategy(df):
+    # Test with serialization operation pattern
+    data = {{'a': 1, 'b': 2}}
+    try:
+        {pattern}
+    except Exception:
+        pass
+    return pd.Series(index=df.index, data=1.0)
+""".encode('utf-8'))
+                tmp_path = tmp.name
+            
+            try:
+                # Check if validation fails as expected
+                success = True
+                try:
+                    validate_strategy_file(tmp_path)
+                except SecurityError:
+                    success = False
+                
+                # Verify the result matches expectations
+                if should_fail and success:
+                    self.fail(f"Dangerous serialization operation '{pattern}' was not detected")
+                elif not should_fail and not success:
+                    self.fail(f"Safe serialization operation '{pattern}' was incorrectly flagged")
+            finally:
+                # Clean up
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
 
 if __name__ == '__main__':
     unittest.main() 

@@ -14,9 +14,26 @@ ALLOWED_OS_FUNCTIONS = {
 
 # Explicitly banned modules (will be checked in addition to not being in ALLOWED_MODULES)
 BANNED_MODULES = {
-    'requests', 'urllib', 'http', 'socket', 'subprocess', 
-    'multiprocessing', 'threading', 'asyncio', 'concurrent',
-    'ctypes', 'pickle', 'marshal', 'shelve'
+    # Network and HTTP
+    'requests', 'urllib', 'http', 'socket', 
+    
+    # Process and system
+    'subprocess', 'multiprocessing', 'threading', 'asyncio', 'concurrent',
+    
+    # Low-level and system access
+    'ctypes', 'sys', 'os.path',
+    
+    # Serialization
+    'pickle', 'marshal', 'shelve', 'json.tool',
+    
+    # File operations
+    'tempfile', 'shutil', 
+    
+    # Code generation and execution
+    'imp', 'importlib', 'ast', 'code', 'codeop',
+    
+    # Other dangerous modules
+    'pty', 'pdb', 'trace', 'profile', 'bdb'
 }
 
 # Allowed external data sources (domain whitelist)
@@ -145,4 +162,17 @@ BANDIT_CONF = {
             'concurrent'
         ]
     }
+}
+
+# Explicitly allowed pandas_datareader functions (whitelist approach)
+ALLOWED_PANDAS_DATAREADER = {
+    'DataReader',              # Main data fetching function
+    'get_data_yahoo',          # Yahoo finance data
+    'get_data_fred',           # Federal Reserve Economic Data
+    'get_data_stooq',          # Stooq data
+    'get_data_alpha_vantage',  # Alpha Vantage data
+    'get_data_naver',          # Naver finance data
+    'get_nasdaq_symbols',      # NASDAQ symbols
+    'get_iex_symbols',         # IEX symbols
+    'get_tiingo_symbols'       # Tiingo symbols
 } 
