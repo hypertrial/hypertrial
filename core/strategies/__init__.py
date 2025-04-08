@@ -49,10 +49,12 @@ def list_strategies() -> Dict[str, str]:
 
 def load_strategies():
     """
-    Load all strategy modules from the strategies directory
+    Load all strategy modules from the core/strategies directory
+    and the top-level submit_strategies directory
     """
-    strategies_dir = os.path.dirname(os.path.abspath(__file__))
-    for filename in os.listdir(strategies_dir):
+    # Load strategies from core/strategies
+    core_strategies_dir = os.path.dirname(os.path.abspath(__file__))
+    for filename in os.listdir(core_strategies_dir):
         if filename.endswith('.py') and filename != '__init__.py':
             module_name = filename[:-3]  # Remove .py extension
             module = importlib.import_module(f'core.strategies.{module_name}')
@@ -61,4 +63,22 @@ def load_strategies():
             for _, obj in inspect.getmembers(module):
                 if callable(obj) and hasattr(obj, '__module__') and obj.__module__ == module.__name__:
                     # The function will be automatically registered if decorated
-                    pass 
+                    pass
+    
+    # Load strategies from top-level submit_strategies directory
+    try:
+        # Get path to top-level submit_strategies directory
+        top_strategies_dir = os.path.join(os.path.dirname(os.path.dirname(core_strategies_dir)), 'submit_strategies')
+        if os.path.exists(top_strategies_dir):
+            for filename in os.listdir(top_strategies_dir):
+                if filename.endswith('.py') and filename != '__init__.py':
+                    module_name = filename[:-3]  # Remove .py extension
+                    module = importlib.import_module(f'submit_strategies.{module_name}')
+                    
+                    # Find all functions in the module with the register_strategy decorator
+                    for _, obj in inspect.getmembers(module):
+                        if callable(obj) and hasattr(obj, '__module__') and obj.__module__ == module.__name__:
+                            # The function will be automatically registered if decorated
+                            pass
+    except ImportError as e:
+        print(f"Warning: Could not import from submit_strategies directory: {e}") 

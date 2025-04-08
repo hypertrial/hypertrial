@@ -10,6 +10,8 @@ from core.config import BACKTEST_START
 import multiprocessing as mp
 from functools import partial
 import time
+from importlib import import_module
+import inspect
 
 def parse_args():
     """Parse command line arguments"""
@@ -210,10 +212,6 @@ def main():
     strategy_name = args.strategy
     strategy_fn = get_strategy(strategy_name)
     
-    # Import the strategy class dynamically to access its methods
-    from importlib import import_module
-    import inspect
-    
     # Find the strategy class from the registered modules
     strategy_class = None
     for module_name in [f"core.strategies.{name}" for name in list_strategies().keys()]:
@@ -228,6 +226,21 @@ def main():
                 break
         except ImportError:
             continue
+    
+    # If not found in core.strategies, try in submit_strategies
+    if not strategy_class:
+        for module_name in [f"submit_strategies.{name}" for name in list_strategies().keys()]:
+            try:
+                module = import_module(module_name)
+                for name, obj in inspect.getmembers(module):
+                    if inspect.isclass(obj) and hasattr(obj, 'construct_features') and hasattr(obj, 'compute_weights'):
+                        if strategy_name in str(obj):
+                            strategy_class = obj
+                            break
+                if strategy_class:
+                    break
+            except ImportError:
+                continue
     
     # Prepare features for visualization
     if strategy_class:
