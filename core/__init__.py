@@ -17,7 +17,7 @@ Official repository: https://github.com/mattfaltyn/hypertrial
 PyPI package: https://pypi.org/project/hypertrial/
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 # Make the security module available at the package level
 from core import security

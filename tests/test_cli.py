@@ -73,6 +73,18 @@ class TestCommandLineInterface(unittest.TestCase):
             self.assertTrue(callable(main))
         except ImportError:
             self.skipTest("core.main module not importable")
+    
+    def test_strategy_file_option(self):
+        """Test that the CLI accepts the --strategy-file option."""
+        # Check that the --strategy-file option is recognized
+        result = subprocess.run(
+            [sys.executable, "-m", "core.main", "--help"],
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('--strategy-file', result.stdout)
+        self.assertIn('-f', result.stdout)  # Check short option too
 
 
 class TestVirtualEnvInstallation(unittest.TestCase):

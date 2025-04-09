@@ -6,7 +6,7 @@ readme_path = "PYPI_README.md" if os.path.exists("PYPI_README.md") else "README.
 
 setup(
     name="hypertrial",
-    version="0.1.2",
+    version="0.1.3",
     description="Bitcoin Dollar-Cost Averaging (DCA) Backtest Framework",
     long_description=open(readme_path).read(),
     long_description_content_type="text/markdown",

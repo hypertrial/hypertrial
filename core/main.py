@@ -6,9 +6,9 @@ import pandas as pd
 from core.data import load_data
 from core.plots import plot_price_vs_lookback_avg, plot_final_weights, plot_weight_sums_by_cycle
 from core.spd import backtest_dynamic_dca, list_available_strategies, compute_cycle_spd
-from core.strategies import load_strategies, get_strategy, list_strategies
-from core.config import BACKTEST_START
-from core.security import StrategySecurity, SecurityError
+from core.strategies import load_strategies, get_strategy, list_strategies, _strategies
+from core.config import BACKTEST_START, BACKTEST_END
+from core.security import StrategySecurity, SecurityError, validate_strategy_file
 from core.security.utils import get_bandit_threat_level
 import multiprocessing as mp
 from functools import partial
@@ -16,6 +16,8 @@ import time
 from importlib import import_module
 import inspect
 import logging
+import numpy as np
+from typing import Dict, Any, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +30,10 @@ def parse_args():
         '--strategy', '-s', 
         default='dynamic_dca',
         help='Strategy to use for backtesting'
+    )
+    parser.add_argument(
+        '--strategy-file', '-f',
+        help='Path to a standalone Python strategy file for backtesting'
     )
     parser.add_argument(
         '--list', '-l', 
@@ -314,43 +320,73 @@ def main():
             backtest_all_strategies(btc_df, args.output_dir, show_plots=False)
             return
         
-        # Otherwise, continue with single strategy backtest
-        strategy_name = args.strategy
-        
-        try:
-            # Get the requested strategy with security checks
-            strategy_fn = get_strategy(strategy_name)
-        except ValueError as e:
-            logger.error(f"Strategy not found: {strategy_name}")
-            logger.error("Available strategies:")
-            for name in list_strategies():
-                logger.error(f" - {name}")
-            return
+        # Handle standalone strategy file if provided
+        if args.strategy_file:
+            strategy_name = os.path.basename(args.strategy_file).replace('.py', '')
+            strategy_path = os.path.abspath(args.strategy_file)
             
-        logger.info(btc_df.info())
-        logger.info(btc_df.head())
-        
-        # Find the strategy class from the registered modules
-        strategy_class = None
-        for module_name in [f"core.strategies.{name}" for name in list_strategies().keys()]:
+            if not os.path.exists(strategy_path):
+                logger.error(f"Strategy file not found: {strategy_path}")
+                return
+                
             try:
-                module = import_module(module_name)
+                # Validate the strategy file for security
+                validate_strategy_file(strategy_path)
+                
+                # Import the module using importlib
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(strategy_name, strategy_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Find the strategy function
+                strategy_fn = None
+                for name, obj in inspect.getmembers(module):
+                    if callable(obj) and name in _strategies:
+                        strategy_fn = obj
+                        strategy_name = name
+                        break
+                
+                if not strategy_fn:
+                    logger.error(f"No registered strategy function found in {args.strategy_file}")
+                    logger.error("Make sure your strategy file contains a function decorated with @register_strategy")
+                    logger.error("Example: @register_strategy('my_strategy')")
+                    logger.error("def my_strategy(df): ...")
+                    return
+                    
+                # Apply security wrapper
+                strategy_fn = StrategySecurity.secure_strategy(strategy_fn)
+                
+                # Find strategy class for feature construction
+                strategy_class = None
                 for name, obj in inspect.getmembers(module):
                     if inspect.isclass(obj) and hasattr(obj, 'construct_features') and hasattr(obj, 'compute_weights'):
-                        if strategy_name in str(obj):
-                            strategy_class = obj
-                            break
-                if strategy_class:
-                    break
-            except ImportError:
-                continue
-        
-        # If not found in core.strategies, try in submit_strategies
-        if not strategy_class:
-            for module_name in [f"submit_strategies.{name}" for name in os.listdir(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'submit_strategies')) 
-                               if name.endswith('.py') and not name.startswith('__')]:
+                        strategy_class = obj
+                        break
+                
+                logger.info(f"Successfully loaded strategy '{strategy_name}' from file: {args.strategy_file}")
+            except Exception as e:
+                logger.error(f"Error loading strategy file: {str(e)}")
+                return
+                
+        # Otherwise, continue with registered strategy name
+        else:
+            strategy_name = args.strategy
+            
+            try:
+                # Get the requested strategy with security checks
+                strategy_fn = get_strategy(strategy_name)
+            except ValueError as e:
+                logger.error(f"Strategy not found: {strategy_name}")
+                logger.error("Available strategies:")
+                for name in list_strategies():
+                    logger.error(f" - {name}")
+                return
+                
+            # Find the strategy class from the registered modules
+            strategy_class = None
+            for module_name in [f"core.strategies.{name}" for name in list_strategies().keys()]:
                 try:
-                    module_name = module_name.replace('.py', '')
                     module = import_module(module_name)
                     for name, obj in inspect.getmembers(module):
                         if inspect.isclass(obj) and hasattr(obj, 'construct_features') and hasattr(obj, 'compute_weights'):
@@ -359,9 +395,26 @@ def main():
                                 break
                     if strategy_class:
                         break
-                except ImportError as e:
-                    logger.warning(f"Could not import {module_name}: {str(e)}")
+                except ImportError:
                     continue
+            
+            # If not found in core.strategies, try in submit_strategies
+            if not strategy_class:
+                for module_name in [f"submit_strategies.{name}" for name in os.listdir(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'submit_strategies')) 
+                                if name.endswith('.py') and not name.startswith('__')]:
+                    try:
+                        module_name = module_name.replace('.py', '')
+                        module = import_module(module_name)
+                        for name, obj in inspect.getmembers(module):
+                            if inspect.isclass(obj) and hasattr(obj, 'construct_features') and hasattr(obj, 'compute_weights'):
+                                if strategy_name in str(obj):
+                                    strategy_class = obj
+                                    break
+                        if strategy_class:
+                            break
+                    except ImportError as e:
+                        logger.warning(f"Could not import {module_name}: {str(e)}")
+                        continue
         
         # Prepare features for visualization
         if strategy_class:

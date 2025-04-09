@@ -38,6 +38,26 @@ pytest tests/test_submit_strategies.py -v
 
 The `-v` flag provides verbose output so you can see exactly which tests pass or fail.
 
+### Testing a Standalone Strategy File
+
+You can test a standalone strategy file without placing it in the `submit_strategies` directory by using the new `--strategy-file` command line option:
+
+```bash
+python -m core.main --strategy-file path/to/my_strategy.py
+```
+
+This allows you to test your strategy during development without having to import it into the project structure first. The standalone strategy file must still follow the same format requirements as strategies in the `submit_strategies` directory:
+
+1. It must include a class that extends `StrategyTemplate` with the required methods:
+
+   - `construct_features`: For creating additional features from price data
+   - `compute_weights`: For calculating weight allocations
+
+2. It must register the strategy using the `@register_strategy` decorator
+3. It must pass all the security checks that are applied to submitted strategies
+
+The tests in `test_strategy_file.py` verify that the `--strategy-file` feature works correctly and safely.
+
 ### What the Verification Tests Check
 
 The tests in `test_submit_strategies.py` check your strategy for:

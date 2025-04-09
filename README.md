@@ -92,6 +92,27 @@ cd hypertrial
 pip install -e .  # Install in development mode
 ```
 
+### Command Line Interface
+
+You can interact with Hypertrial directly from the command line:
+
+```bash
+# List all available strategies
+python -m core.main --list
+
+# Run backtest with a specific strategy
+python -m core.main --strategy dynamic_dca
+
+# Run backtest on a standalone strategy file
+python -m core.main --strategy-file path/to/my_strategy.py
+
+# Run backtest for all registered strategies
+python -m core.main --backtest-all --output-dir results
+
+# Disable plots during backtest
+python -m core.main --strategy my_strategy --no-plots
+```
+
 ### Tournament Submission Process
 
 1. Open and follow the instructions in the `tutorials/3. Submission_Template.ipynb` notebook. This notebook serves as the template and guide for creating your strategy.
@@ -215,6 +236,7 @@ For the tournament:
   - `STRATEGIES.md`: Detailed tournament submission instructions (supplements the notebook).
 - `tests/`: Test suite
   - `test_submit_strategies.py`: Tests to verify your final submission file.
+  - `test_strategy_file.py`: Tests for the standalone strategy file feature.
   - `test_security.py`: Tests for the security system
   - `TESTS.md`: Detailed testing information
 - `results/`: Directory where strategy comparison results are stored
