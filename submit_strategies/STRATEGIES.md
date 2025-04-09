@@ -6,10 +6,24 @@ This directory is where you'll submit your strategy for the Stacking Sats Challe
 
 Before submitting your strategy, follow these steps:
 
-1. **Start with Tutorial 1**: Review [`tutorials/1. Intro.ipynb`](../tutorials/1.%20Intro.ipynb) to understand the basics
-2. **Learn the Challenge**: Read through [`tutorials/2. Challenge Overview.ipynb`](../tutorials/2.%20Challenge%20Overview.ipynb) to understand the competition
-3. **Create Your Strategy**: Follow [`tutorials/3. Submission_Template.ipynb`](../tutorials/3.%20Submission_Template.ipynb) to develop and test your strategy
-4. **Submit Your Strategy**: Follow the submission instructions below
+1. **Install the Package**: You can install hypertrial from PyPI:
+
+   ```bash
+   pip install hypertrial
+   ```
+
+   Alternatively, you can install from source:
+
+   ```bash
+   git clone https://github.com/mattfaltyn/hypertrial.git
+   cd hypertrial
+   pip install -e .
+   ```
+
+2. **Start with Tutorial 1**: Review [`tutorials/1. Intro.ipynb`](../tutorials/1.%20Intro.ipynb) to understand the basics
+3. **Learn the Challenge**: Read through [`tutorials/2. Challenge Overview.ipynb`](../tutorials/2.%20Challenge%20Overview.ipynb) to understand the competition
+4. **Create Your Strategy**: Follow [`tutorials/3. Submission_Template.ipynb`](../tutorials/3.%20Submission_Template.ipynb) to develop and test your strategy
+5. **Submit Your Strategy**: Follow the submission instructions below
 
 ## Submission Process
 

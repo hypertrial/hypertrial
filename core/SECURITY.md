@@ -2,6 +2,15 @@
 
 This document outlines the security model implemented in the Stacking Sats Challenge to ensure safe execution of submitted strategies. The security system is designed to prevent potentially harmful code from running while allowing legitimate strategy implementations.
 
+## Package Information
+
+Hypertrial is now available as a PyPI package:
+
+- **PyPI Package**: https://pypi.org/project/hypertrial/
+- **Installation**: `pip install hypertrial`
+
+The security features described in this document are fully integrated into the PyPI package, providing the same protections whether you install from source or via pip.
+
 ## Overview
 
 Hypertrial implements a comprehensive security model that includes:

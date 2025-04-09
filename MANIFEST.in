@@ -1,5 +1,13 @@
 include README.md
+include PYPI_README.md
 include LICENSE
 include pytest.ini
+include requirements.txt
 recursive-include core/data *.csv
-recursive-include core/strategies *.md 
+recursive-include core/strategies *.md
+recursive-include tutorials *.ipynb
+recursive-include results *.md
+recursive-include submit_strategies *.md
+recursive-exclude __pycache__ *
+recursive-exclude *.py[cod]
+recursive-exclude *$py.class 

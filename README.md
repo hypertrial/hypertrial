@@ -2,6 +2,10 @@
 
 A Bitcoin Dollar-Cost Averaging (DCA) tournament platform for evaluating and comparing participant-submitted algorithms.
 
+[![PyPI version](https://img.shields.io/pypi/v/hypertrial.svg)](https://pypi.org/project/hypertrial/)
+[![PyPI status](https://img.shields.io/pypi/status/hypertrial.svg)](https://pypi.org/project/hypertrial/)
+[![Python versions](https://img.shields.io/pypi/pyversions/hypertrial.svg)](https://pypi.org/project/hypertrial/)
+
 ## Tournament Overview
 
 Hypertrial's Stacking Sats challenge hosts a Bitcoin DCA strategy tournament where participants submit their custom strategies to compete for the highest performance. Your strategy will be evaluated using Sats Per Dollar (SPD) metrics across multiple Bitcoin market cycles, allowing for objective comparison against other participants.
@@ -59,9 +63,18 @@ The system detects when running in test mode and applies more relaxed resource l
 
 ### Installation
 
-**Recommended: Use a Virtual Environment**
+**Option 1: Install from PyPI (Recommended)**
 
-It's strongly recommended to use a virtual environment to avoid dependency conflicts:
+```bash
+# Create a virtual environment
+python -m venv hypertrial_venv
+source hypertrial_venv/bin/activate  # On Windows: hypertrial_venv\Scripts\activate
+
+# Install from PyPI
+pip install hypertrial
+```
+
+**Option 2: Install from Source**
 
 ```bash
 # Create a virtual environment
@@ -72,11 +85,8 @@ python -m venv hypertrial_venv
 hypertrial_venv\Scripts\activate
 # On macOS/Linux:
 source hypertrial_venv/bin/activate
-```
 
-Once the virtual environment is activated, install the project:
-
-```bash
+# Clone and install
 git clone https://github.com/mattfaltyn/hypertrial.git
 cd hypertrial
 pip install -e .  # Install in development mode
@@ -119,23 +129,19 @@ python -m core.main --backtest-all --output-dir results
 
 ## Complete Submission Workflow
 
-### 1. Clone the Repository and Set Up Environment
+### 1. Set Up Environment and Install
 
 ```bash
-# Clone the repository
+# Create and activate virtual environment
+python -m venv hypertrial_venv
+source hypertrial_venv/bin/activate  # On Windows: hypertrial_venv\Scripts\activate
+
+# Install from PyPI
+pip install hypertrial
+
+# Or install from source
 git clone https://github.com/mattfaltyn/hypertrial.git
 cd hypertrial
-
-# Create a virtual environment
-python -m venv hypertrial_venv
-
-# Activate the virtual environment
-# On Windows:
-hypertrial_venv\Scripts\activate
-# On macOS/Linux:
-source hypertrial_venv/bin/activate
-
-# Install in development mode
 pip install -e .
 ```
 
@@ -243,6 +249,13 @@ The framework implements stringent security controls:
 - **Test Mode Detection**: Automatically identifies test execution for adjusted limits
 
 Security configuration is defined in `core/security/config.py` and is not customizable by participants.
+
+## Resources
+
+- **GitHub Repository**: https://github.com/mattfaltyn/hypertrial
+- **PyPI Package**: https://pypi.org/project/hypertrial/
+- **Documentation**: Available in the repository's tutorials directory
+- **Issue Tracker**: Submit issues on GitHub
 
 ## License
 

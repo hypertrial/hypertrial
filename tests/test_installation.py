@@ -21,12 +21,12 @@ class TestInstallation(unittest.TestCase):
         
     def test_entry_point_accessible(self):
         """Test that the main entry point is accessible."""
-        spec = importlib.util.find_spec('core.main')
-        self.assertIsNotNone(spec)
-        
-        # Import the main module
-        import core.main
-        self.assertTrue(callable(core.main.main))
+        # Check that core.main is importable
+        try:
+            from core.main import main
+            self.assertTrue(callable(main))
+        except ImportError:
+            self.fail("Could not import main function from core.main")
         
     def test_package_metadata(self):
         """Test package metadata is correctly set."""

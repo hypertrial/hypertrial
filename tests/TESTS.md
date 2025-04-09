@@ -2,6 +2,24 @@
 
 This directory contains tests for verifying that your Stacking Sats Challenge submission meets all requirements.
 
+## Package Installation
+
+Hypertrial is available on PyPI and can be installed with pip:
+
+```bash
+pip install hypertrial
+```
+
+For development and testing purposes, it's recommended to install from source in development mode:
+
+```bash
+git clone https://github.com/mattfaltyn/hypertrial.git
+cd hypertrial
+pip install -e .
+```
+
+The PyPI package can be found at: https://pypi.org/project/hypertrial/
+
 ## Tournament Test Focus
 
 As a tournament participant, you should focus on the `test_submit_strategies.py` file, which specifically tests strategies submitted to the `submit_strategies` directory.
@@ -345,56 +363,4 @@ If you have index mismatches:
 df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
 weights = pd.Series(index=df_backtest.index, data=0.0)
 # Fill in weights...
-```
-
-### External Data Issues
-
-If you're having problems with external data:
-
-```python
-# Proper error handling for external data
-try:
-    # Your API call here
-    external_data = get_external_data()
-    # Use the data
-    df['new_feature'] = process_external_data(external_data)
-except Exception:
-    # Fallback behavior
-    df['new_feature'] = df['btc_close'] / df['btc_close'].mean()  # Some reasonable default
-```
-
-### Security Violations
-
-If your strategy is failing due to security violations:
-
-```python
-# Avoid dangerous operations like this
-# BAD: eval(f"2 * {external_data['value']}")
-
-# Instead, do direct calculations
-# GOOD: result = 2 * external_data['value']
-
-# Avoid deep loops or recursion
-# BAD: complex nested loops with no clear exit
-# GOOD: vectorized operations or simple loops with clear termination
-
-# Avoid modifying the input DataFrame directly
-# BAD: df['new_column'] = calculation
-# GOOD: df_copy = df.copy()
-#       df_copy['new_column'] = calculation
-```
-
-## Final Verification
-
-After your tests pass locally, run one final verification:
-
-```bash
-# Verify strategy loads and runs
-python -m core.main --strategy your_strategy_name
-
-# Compare against baseline strategies
-python -m core.main --backtest-all --output-dir results
-
-# Run security tests specifically
-pytest tests/test_security.py -v
 ```
