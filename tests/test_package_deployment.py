@@ -98,7 +98,7 @@ class TestPackageDeployment(unittest.TestCase):
         # Check that entry points are defined
         self.assertIn("entry_points", content, "Entry points not defined in setup.py")
         self.assertIn("console_scripts", content, "Console scripts not defined in setup.py")
-        self.assertIn("hypertrial=core.main:main", content, "Main entry point not correctly defined")
+        self.assertIn("hypertrial=core.cli:cli_main", content, "Main entry point not correctly defined")
     
     def test_requirements_matching(self):
         """Test that requirements.txt matches setup.py install_requires."""

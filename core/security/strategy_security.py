@@ -64,9 +64,9 @@ class StrategySecurity:
                 
                 # Check for DataFrame write operations
                 if method_name.startswith('to_'):
-                    # Allow certain essential DataFrame operations in test mode
-                    if is_test_mode() and method_name in {'to_csv', 'to_datetime', 'to_numpy', 'to_dict', 'to_records', 'to_series'}:
-                        # These operations are permitted in test mode
+                    # Allow certain essential DataFrame operations in any mode
+                    if method_name in {'to_datetime', 'to_series'} or (is_test_mode() and method_name in {'to_csv', 'to_numpy', 'to_dict', 'to_records'}):
+                        # These operations are permitted
                         pass
                     else:
                         # Block all DataFrame output operations in production

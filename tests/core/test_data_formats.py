@@ -154,15 +154,18 @@ class TestDataFormats:
         
         # Mock the import system
         with patch.dict('sys.modules', {'core.data.extract_data': mock_extract_data}):
-            # Mock os.path.exists to force using the API
-            with patch('os.path.exists', return_value=False):
-                # Test loading from our mocked API
-                df = load_data()
-                
-                # Check that the data was loaded correctly
-                assert len(df) == 2
-                assert "btc_close" in df.columns
-                assert df.loc['2020-01-01', "btc_close"] == 10000
+            # Need to patch the import in core.data that imports extract_btc_data
+            # This is necessary because the function is imported at module level
+            with patch('core.data.extract_btc_data', mock_extract_func):
+                # Mock os.path.exists to force using the API
+                with patch('os.path.exists', return_value=False):
+                    # Test loading from our mocked API
+                    df = load_data()
+                    
+                    # Check that the data was loaded correctly
+                    assert len(df) == 2
+                    assert "btc_close" in df.columns
+                    assert df.loc['2020-01-01', "btc_close"] == 10000
 
     def test_different_column_names(self):
         """Test handling of different column names."""

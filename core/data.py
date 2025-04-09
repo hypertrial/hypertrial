@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import logging
 import numpy as np
+import requests
+import json
+from datetime import timedelta, datetime
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -172,6 +175,14 @@ def load_data(csv_path='core/data/btc_price_data.csv'):
     Raises:
         RuntimeError: If data cannot be loaded
     """
+    # SAFEGUARD: Detect if running in test and using production data path
+    if 'core/data/btc_price_data.csv' in csv_path and 'TEST_ONLY' not in csv_path and 'test_' not in csv_path:
+        from core.data.extract_data import is_running_in_test
+        if is_running_in_test():
+            logging.warning(f"Test environment detected. Redirecting from production data path {csv_path}")
+            logging.warning(f"Using TEST_ONLY_btc_data.csv instead")
+            csv_path = 'core/data/TEST_ONLY_btc_data.csv'
+    
     # Check if the file exists
     if os.path.exists(csv_path):
         logging.info(f"Loading BTC data from {csv_path}")
@@ -195,18 +206,44 @@ def load_data(csv_path='core/data/btc_price_data.csv'):
             logging.error(f"Failed to load data from CSV: {e}")
             logging.info("Attempting to fetch data from CoinMetrics instead...")
     else:
-        logging.info("Local CSV not found. Attempting to fetch data from CoinMetrics...")
+        logging.info(f"Local CSV not found at '{csv_path}'. Attempting to fetch data from CoinMetrics...")
     
     # If file doesn't exist or couldn't be read, try to fetch it from CoinMetrics
     try:
-        from core.data.extract_data import extract_btc_data
-        return extract_btc_data()
-    except (ImportError, ModuleNotFoundError) as e:
+        # Import directly from core.data package to avoid circular imports
+        from core.data import extract_btc_data
+        btc_df = extract_btc_data(csv_path=csv_path)
+        
+        # Ensure we got valid data
+        if btc_df is not None and not btc_df.empty:
+            logging.info(f"Successfully fetched data from CoinMetrics: {len(btc_df)} records")
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            
+            # Save to the expected CSV location for future use
+            btc_df.to_csv(csv_path)
+            logging.info(f"Saved downloaded data to {csv_path} for future use")
+            
+            return btc_df
+        else:
+            raise RuntimeError("Downloaded data is empty or invalid")
+            
+    except ImportError as e:
         logging.error(f"CoinMetrics API client not available: {e}")
         raise RuntimeError("CoinMetrics API client is required but not installed. Run 'pip install coinmetrics-api-client'.")
+    except requests.ConnectionError as e:
+        logging.error(f"Connection error when fetching data from CoinMetrics: {e}")
+        raise RuntimeError(f"Could not load BTC price data: Connection error - {str(e)}. Please check your internet connection.")
+    except requests.Timeout as e:
+        logging.error(f"Timeout error when fetching data from CoinMetrics: {e}")
+        raise RuntimeError(f"Could not load BTC price data: Request timed out - {str(e)}. Please try again later.")
+    except json.JSONDecodeError as e:
+        logging.error(f"JSON decode error when fetching data from CoinMetrics: {e}")
+        raise RuntimeError(f"Could not load BTC price data: Invalid JSON response - {str(e)}. API may be experiencing issues.")
     except Exception as e:
         logging.error(f"Failed to fetch data from CoinMetrics: {e}")
-        raise RuntimeError("Could not load BTC price data. Please run extract_data.py first to create the CSV file.")
+        raise RuntimeError(f"Could not load BTC price data: {str(e)}. Please check your internet connection or run extract_data.py manually to create the CSV file.")
 
 if __name__ == "__main__":
     # Test data loading

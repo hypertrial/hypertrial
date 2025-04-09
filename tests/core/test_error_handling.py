@@ -15,39 +15,36 @@ class TestErrorHandling:
     
     def test_api_connection_error(self):
         """Test handling of API connection errors."""
-        # Mock the extract_btc_data import and the function to raise a connection error
-        with patch.dict('sys.modules', {'core.data.extract_data': MagicMock()}):
-            with patch('core.data.extract_data.extract_btc_data', side_effect=requests.ConnectionError("Connection failed")):
-                # Mock the os.path.exists to return False so we try to fetch data
-                with patch('os.path.exists', return_value=False):
-                    # Test that a RuntimeError is raised with the appropriate message
-                    with pytest.raises(RuntimeError) as exc_info:
-                        load_data()
-                    assert "Could not load BTC price data" in str(exc_info.value)
+        # Mock the os.path.exists to return False so we try to fetch data
+        with patch('os.path.exists', return_value=False):
+            # Directly patch the imported function in core.data
+            with patch('core.data.extract_btc_data', side_effect=requests.ConnectionError("Connection failed")):
+                # Test that a RuntimeError is raised with the appropriate message
+                with pytest.raises(RuntimeError) as exc_info:
+                    load_data()
+                assert "Could not load BTC price data" in str(exc_info.value)
     
     def test_api_timeout_error(self):
         """Test handling of API timeout errors."""
-        # Mock the extract_btc_data import and function to raise a timeout error
-        with patch.dict('sys.modules', {'core.data.extract_data': MagicMock()}):
-            with patch('core.data.extract_data.extract_btc_data', side_effect=requests.Timeout("Request timed out")):
-                # Mock the os.path.exists to return False so we try to fetch data
-                with patch('os.path.exists', return_value=False):
-                    # Test that a RuntimeError is raised with the appropriate message
-                    with pytest.raises(RuntimeError) as exc_info:
-                        load_data()
-                    assert "Could not load BTC price data" in str(exc_info.value)
+        # Mock the os.path.exists to return False so we try to fetch data
+        with patch('os.path.exists', return_value=False):
+            # Directly patch the imported function in core.data
+            with patch('core.data.extract_btc_data', side_effect=requests.Timeout("Request timed out")):
+                # Test that a RuntimeError is raised with the appropriate message
+                with pytest.raises(RuntimeError) as exc_info:
+                    load_data()
+                assert "Could not load BTC price data" in str(exc_info.value)
     
     def test_api_json_error(self):
         """Test handling of malformed JSON in API responses."""
-        # Mock the extract_btc_data import and function to raise a JSON decode error
-        with patch.dict('sys.modules', {'core.data.extract_data': MagicMock()}):
-            with patch('core.data.extract_data.extract_btc_data', side_effect=json.JSONDecodeError("Malformed JSON", "", 0)):
-                # Mock the os.path.exists to return False so we try to fetch data
-                with patch('os.path.exists', return_value=False):
-                    # Test that a RuntimeError is raised with the appropriate message
-                    with pytest.raises(RuntimeError) as exc_info:
-                        load_data()
-                    assert "Could not load BTC price data" in str(exc_info.value)
+        # Mock the os.path.exists to return False so we try to fetch data
+        with patch('os.path.exists', return_value=False):
+            # Directly patch the imported function in core.data
+            with patch('core.data.extract_btc_data', side_effect=json.JSONDecodeError("Malformed JSON", "", 0)):
+                # Test that a RuntimeError is raised with the appropriate message
+                with pytest.raises(RuntimeError) as exc_info:
+                    load_data()
+                assert "Could not load BTC price data" in str(exc_info.value)
     
     def test_malformed_csv_error(self):
         """Test handling of malformed CSV files."""

@@ -22,6 +22,7 @@ As a tournament participant, your task is to develop and submit a custom DCA str
 ## Features
 
 - **External Strategy Submissions**: Add your strategy to the `submit_strategies` directory
+- **Standalone Strategy Testing**: Run individual strategy files directly without installation
 - **Automated Testing**: Verify your strategy works with our test suite
 - **Performance Metrics**: Compare your strategy against others using SPD metrics
 - **Cross-Cycle Analysis**: See how your strategy performs across different Bitcoin market cycles
@@ -103,7 +104,10 @@ python -m core.main --list
 # Run backtest with a specific strategy
 python -m core.main --strategy dynamic_dca
 
-# Run backtest on a standalone strategy file
+# Run a standalone strategy file (without loading other strategies)
+python -m core.main --strategy-file path/to/my_strategy.py --standalone
+
+# Test a strategy file while still loading registered strategies
 python -m core.main --strategy-file path/to/my_strategy.py
 
 # Run backtest for all registered strategies
@@ -111,6 +115,34 @@ python -m core.main --backtest-all --output-dir results
 
 # Disable plots during backtest
 python -m core.main --strategy my_strategy --no-plots
+```
+
+### Standalone Strategy Testing
+
+The standalone mode is useful for directly testing strategy files without adding them to the project structure:
+
+```bash
+python -m core.main --strategy-file path/to/my_strategy.py --standalone
+```
+
+Key features of standalone mode:
+
+- Runs a single strategy file in isolation
+- Does not load other registered strategies
+- Uses the same Bitcoin price data as the main framework
+- Performs security validation of the strategy code
+- Shows performance metrics and visualizations
+- Useful for iterative development before final submission
+
+The Bitcoin price data is loaded from:
+
+1. The default local CSV file (`core/data/btc_price_data.csv`)
+2. If the file doesn't exist, data is automatically downloaded from the CoinMetrics API
+
+You can specify a custom data file with:
+
+```bash
+python -m core.main --strategy-file path/to/my_strategy.py --standalone --data-file path/to/custom_data.csv
 ```
 
 ### Tournament Submission Process
@@ -185,15 +217,24 @@ Follow the steps outlined in the `tutorials/3. Submission_Template.ipynb` notebo
 - Testing your strategy locally.
 - Extracting your final strategy code into a `.py` file for submission.
 
-### 4. Verify Your Strategy
+### 4. Test During Development
 
-Run the test suite to ensure your strategy meets all tournament requirements:
+During strategy development, use the standalone mode for rapid testing:
+
+```bash
+# Test your strategy directly without adding it to the project
+python -m core.main --strategy-file path/to/my_strategy.py --standalone
+```
+
+### 5. Verify Your Final Strategy
+
+Once your strategy is ready, place it in the `submit_strategies` directory and run the test suite:
 
 ```bash
 pytest tests/test_submit_strategies.py
 ```
 
-### 5. Test Your Strategy's Performance
+### 6. Test Your Strategy's Performance
 
 Evaluate how your strategy performs:
 
@@ -201,7 +242,7 @@ Evaluate how your strategy performs:
 python -m core.main --strategy my_strategy
 ```
 
-### 6. Compare Against Other Strategies
+### 7. Compare Against Other Strategies
 
 See how your strategy ranks against baseline strategies:
 
@@ -209,7 +250,7 @@ See how your strategy ranks against baseline strategies:
 python -m core.main --backtest-all --output-dir results
 ```
 
-### 7. Submit Your Strategy
+### 8. Submit Your Strategy
 
 For the tournament:
 

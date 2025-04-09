@@ -36,6 +36,16 @@ def parse_args():
         help='Path to a standalone Python strategy file for backtesting'
     )
     parser.add_argument(
+        '--standalone', '-st',
+        action='store_true',
+        help='Run only the specified strategy file without loading other strategies'
+    )
+    parser.add_argument(
+        '--save-plots', '-sp',
+        action='store_true',
+        help='Save plots to files in the output directory'
+    )
+    parser.add_argument(
         '--list', '-l', 
         action='store_true',
         help='List all available strategies'
@@ -54,6 +64,16 @@ def parse_args():
         '--output-dir', '-o',
         default='results',
         help='Directory to store CSV results (default: results)'
+    )
+    parser.add_argument(
+        '--download-data', '-d',
+        action='store_true',
+        help='Force download of fresh price data from CoinMetrics API'
+    )
+    parser.add_argument(
+        '--data-file', '-df',
+        default='core/data/btc_price_data.csv',
+        help='Path to the price data CSV file'
     )
     return parser.parse_args()
 
@@ -296,23 +316,40 @@ def check_submit_strategies_path():
 
 def main():
     try:
+        # Parse command line arguments first
+        args = parse_args()
+        
         # Check submit_strategies path
         if not check_submit_strategies_path():
             return
     
-        # Load all strategies with security checks
-        load_strategies()
-        
-        # Parse command line arguments
-        args = parse_args()
+        # Load all strategies with security checks unless in standalone mode
+        if not (args.strategy_file and args.standalone):
+            load_strategies()
         
         # List strategies if requested
         if args.list:
             list_available_strategies()
             return
         
+        # Handle forced data download if requested
+        if args.download_data:
+            try:
+                logger.info("Forcing download of fresh BTC price data from CoinMetrics...")
+                from core.data.extract_data import extract_btc_data
+                btc_df = extract_btc_data(save_to_csv=True)
+                logger.info(f"Successfully downloaded fresh BTC price data: {len(btc_df)} records")
+            except Exception as e:
+                logger.error(f"Failed to download fresh data: {str(e)}")
+                logger.error("Continuing with existing data if available...")
+        
         # Load BTC data
-        btc_df = load_data()
+        try:
+            btc_df = load_data(csv_path=args.data_file)
+        except Exception as e:
+            logger.error(f"Failed to load data: {str(e)}")
+            logger.error("Please run with --download-data to fetch fresh data or ensure the data file exists.")
+            return
         
         # If backtest all flag is set, run all strategies and exit
         if args.backtest_all:
@@ -337,25 +374,33 @@ def main():
                 import importlib.util
                 spec = importlib.util.spec_from_file_location(strategy_name, strategy_path)
                 module = importlib.util.module_from_spec(spec)
+                # Add the module to sys.modules so that @register_strategy works
+                import sys
+                sys.modules[strategy_name] = module
+                
+                # Get the registered strategies before loading
+                from core.strategies import _strategies
+                before_strategies = set(_strategies.keys())
+                
+                # Execute the module to register the strategy
                 spec.loader.exec_module(module)
                 
-                # Find the strategy function
-                strategy_fn = None
-                for name, obj in inspect.getmembers(module):
-                    if callable(obj) and name in _strategies:
-                        strategy_fn = obj
-                        strategy_name = name
-                        break
+                # Find the newly registered strategy
+                after_strategies = set(_strategies.keys())
+                new_strategies = after_strategies - before_strategies
                 
-                if not strategy_fn:
+                if new_strategies:
+                    # Use the newly registered strategy
+                    strategy_name = list(new_strategies)[0]
+                    strategy_fn = _strategies[strategy_name]
+                    logger.info(f"Successfully loaded strategy '{strategy_name}' from file: {args.strategy_file}")
+                else:
+                    # No new strategy was registered
                     logger.error(f"No registered strategy function found in {args.strategy_file}")
                     logger.error("Make sure your strategy file contains a function decorated with @register_strategy")
                     logger.error("Example: @register_strategy('my_strategy')")
                     logger.error("def my_strategy(df): ...")
                     return
-                    
-                # Apply security wrapper
-                strategy_fn = StrategySecurity.secure_strategy(strategy_fn)
                 
                 # Find strategy class for feature construction
                 strategy_class = None
@@ -364,7 +409,8 @@ def main():
                         strategy_class = obj
                         break
                 
-                logger.info(f"Successfully loaded strategy '{strategy_name}' from file: {args.strategy_file}")
+                # Apply security wrapper
+                strategy_fn = StrategySecurity.secure_strategy(strategy_fn)
             except Exception as e:
                 logger.error(f"Error loading strategy file: {str(e)}")
                 return
@@ -428,6 +474,8 @@ def main():
         weights = strategy_fn(btc_df)
 
         # Plot results only if not disabled
+        from core.plots import print_weight_sums_by_cycle  # Import here to be used in both cases
+        
         if not args.no_plots:
             # Pass the full features dataframe to the plot functions
             # Each plot function should extract only the features it needs
@@ -441,11 +489,35 @@ def main():
             plot_weight_sums_by_cycle(weights)
         else:
             # Still print the weight sums even if plots are disabled
-            from core.plots import print_weight_sums_by_cycle
             print_weight_sums_by_cycle(weights)
 
         # Run SPD backtest and plot results with security checks
-        backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=not args.no_plots)
+        if args.standalone and args.strategy_file:
+            # In standalone mode, only compute SPD for the specified strategy
+            from core.spd import compute_spd_metrics, standalone_plot_comparison
+            
+            # Print numeric results
+            result = compute_spd_metrics(btc_df, weights, strategy_name=strategy_name)
+            print(f"\nSPD Metrics for {strategy_name}:")
+            print("Dynamic SPD:")
+            print(f"  min: {result['min_spd']:.2f}")
+            print(f"  max: {result['max_spd']:.2f}")
+            print(f"  mean: {result['mean_spd']:.2f}")
+            print(f"  median: {result['median_spd']:.2f}")
+            
+            print("\nExcess SPD Percentile Difference (Dynamic - Uniform) per Cycle:")
+            for cycle, excess_pct in result['excess_pct_by_cycle'].items():
+                print(f"  {cycle}: {excess_pct:.2f}%")
+            
+            print(f"\nMean Excess Percentile: {result['mean_excess_pct']:.2f}%")
+            
+            # Generate plots if not disabled
+            if not args.no_plots:
+                standalone_plot_comparison(btc_df, weights, strategy_name=strategy_name,
+                                          save_to_file=args.save_plots, output_dir=args.output_dir)
+        else:
+            # Regular mode: run comparison against uniform DCA
+            backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=not args.no_plots)
         
     except SecurityError as e:
         logger.error(f"Security violation detected: {str(e)}")

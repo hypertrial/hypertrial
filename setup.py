@@ -47,7 +47,7 @@ setup(
     python_requires=">=3.6, <4.0",
     entry_points={
         "console_scripts": [
-            "hypertrial=core.main:main",
+            "hypertrial=core.cli:cli_main",
         ],
     },
 ) 

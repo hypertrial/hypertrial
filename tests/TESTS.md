@@ -40,13 +40,38 @@ The `-v` flag provides verbose output so you can see exactly which tests pass or
 
 ### Testing a Standalone Strategy File
 
-You can test a standalone strategy file without placing it in the `submit_strategies` directory by using the new `--strategy-file` command line option:
+You can test a standalone strategy file without placing it in the `submit_strategies` directory by using the `--strategy-file` command line option:
 
 ```bash
+# Regular mode - loads the strategy file alongside other strategies
 python -m core.main --strategy-file path/to/my_strategy.py
+
+# Standalone mode - only loads the specified strategy file
+python -m core.main --strategy-file path/to/my_strategy.py --standalone
 ```
 
-This allows you to test your strategy during development without having to import it into the project structure first. The standalone strategy file must still follow the same format requirements as strategies in the `submit_strategies` directory:
+The standalone mode provides several advantages during development:
+
+1. **Isolation**: Tests your strategy in isolation without interference from other strategies.
+2. **No Installation Required**: You don't need to add the strategy to the project structure.
+3. **Rapid Testing**: Quickly iterate on your strategy without modifying the project.
+4. **Direct Feedback**: Performance metrics are displayed immediately for your strategy only.
+
+### Data Sources in Standalone Mode
+
+When running in standalone mode, the system loads Bitcoin price data from:
+
+1. The default local CSV file at `core/data/btc_price_data.csv`
+2. If the file doesn't exist, data is automatically downloaded from the CoinMetrics API
+3. You can specify a custom data file using the `--data-file` option:
+
+```bash
+python -m core.main --strategy-file path/to/my_strategy.py --standalone --data-file path/to/custom_data.csv
+```
+
+### Strategy File Requirements
+
+The standalone strategy file must still follow the same format requirements as strategies in the `submit_strategies` directory:
 
 1. It must include a class that extends `StrategyTemplate` with the required methods:
 
@@ -56,7 +81,20 @@ This allows you to test your strategy during development without having to impor
 2. It must register the strategy using the `@register_strategy` decorator
 3. It must pass all the security checks that are applied to submitted strategies
 
-The tests in `test_strategy_file.py` verify that the `--strategy-file` feature works correctly and safely.
+### Standalone vs. Regular Mode
+
+The difference between regular and standalone modes:
+
+| Feature               | Regular Mode                 | Standalone Mode                       |
+| --------------------- | ---------------------------- | ------------------------------------- |
+| Command               | `--strategy-file` only       | `--strategy-file` with `--standalone` |
+| Strategy Registration | Required                     | Required                              |
+| Other Strategies      | Loaded                       | Not loaded                            |
+| Data Source           | Same                         | Same                                  |
+| Security Checks       | Applied                      | Applied                               |
+| Performance Metrics   | Compared to other strategies | Standalone only                       |
+
+The tests in `test_strategy_file.py` verify that both modes work correctly and safely.
 
 ### What the Verification Tests Check
 

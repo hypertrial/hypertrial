@@ -83,7 +83,7 @@ class TestSetup(unittest.TestCase):
             
         self.assertIn("entry_points", setup_content)
         self.assertIn("console_scripts", setup_content)
-        self.assertIn("hypertrial=core.main:main", setup_content)
+        self.assertIn("hypertrial=core.cli:cli_main", setup_content)
 
 
 if __name__ == "__main__":

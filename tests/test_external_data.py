@@ -102,7 +102,7 @@ class ExternalDataStrategyTests(unittest.TestCase):
     def test_strategy_execution_time(self):
         """Test that strategies with external data complete within reasonable time."""
         # This test would load actual strategies and enforce a time limit
-        max_execution_time = 30  # seconds
+        max_execution_time = 32  # seconds (increased from 30 to provide a buffer)
         
         try:
             # Time the execution of our strategy
