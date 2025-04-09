@@ -43,7 +43,7 @@ setup(
         "Topic :: Office/Business :: Financial :: Investment",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.6, <3.13",
+    python_requires=">=3.6, <3.14",
     entry_points={
         "console_scripts": [
             "hypertrial=core.main:main",
