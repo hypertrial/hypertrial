@@ -1,6 +1,6 @@
-# Hypertrial Security Model
+# Hypertrial: Stacking Sats Challenge - Security Model
 
-This document outlines the security model implemented in Hypertrial to ensure safe execution of submitted strategies. The security system is designed to prevent potentially harmful code from running while allowing legitimate strategy implementations.
+This document outlines the security model implemented in the Stacking Sats Challenge to ensure safe execution of submitted strategies. The security system is designed to prevent potentially harmful code from running while allowing legitimate strategy implementations.
 
 ## Overview
 

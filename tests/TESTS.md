@@ -1,6 +1,6 @@
-# Tournament Strategy Verification Tests
+# Hypertrial: Stacking Sats Challenge - Strategy Verification Tests
 
-This directory contains tests for verifying that your tournament submission meets all requirements.
+This directory contains tests for verifying that your Stacking Sats Challenge submission meets all requirements.
 
 ## Tournament Test Focus
 

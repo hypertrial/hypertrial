@@ -1,10 +1,10 @@
-# Hypertrial: Bitcoin Dollar-Cost Averaging (DCA) Tournament
+# Hypertrial: Stacking Sats Challenge
 
-A Bitcoin DCA strategy competition platform for evaluating and comparing participant-submitted algorithms.
+A Bitcoin Dollar-Cost Averaging (DCA) tournament platform for evaluating and comparing participant-submitted algorithms.
 
 ## Tournament Overview
 
-Hypertrial hosts a Bitcoin DCA strategy tournament where participants submit their custom strategies to compete for the highest performance. Your strategy will be evaluated using Sats Per Dollar (SPD) metrics across multiple Bitcoin market cycles, allowing for objective comparison against other participants.
+Hypertrial's Stacking Sats challenge hosts a Bitcoin DCA strategy tournament where participants submit their custom strategies to compete for the highest performance. Your strategy will be evaluated using Sats Per Dollar (SPD) metrics across multiple Bitcoin market cycles, allowing for objective comparison against other participants.
 
 As a tournament participant, your task is to develop and submit a custom DCA strategy that outperforms traditional approaches by strategically adjusting purchase weights based on market conditions.
 

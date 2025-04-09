@@ -1,24 +1,21 @@
-# Bitcoin DCA Strategy Tournament - Submission Guide
+# Hypertrial: Stacking Sats Challenge - Submission Guide
 
-This directory is where you'll submit your strategy for the Bitcoin DCA Tournament. Follow these instructions carefully to ensure your strategy qualifies for evaluation.
+This directory is where you'll submit your strategy for the Stacking Sats Challenge. Follow these instructions carefully to ensure your strategy qualifies for evaluation.
 
-## Tournament Submission Quick Start
+## Getting Started
 
-1. Copy `strategy_template.py` to a new file with your unique strategy name (e.g., `your_name_strategy.py`)
-2. Implement the required methods in your strategy class
-3. Register your strategy with a unique name using the `@register_strategy` decorator
-4. Verify your strategy passes all tests:
-   ```bash
-   pytest tests/test_submit_strategies.py -v
-   ```
-5. Evaluate your strategy's performance:
-   ```bash
-   python -m core.main --strategy your_strategy_name
-   ```
+Before submitting your strategy, follow these steps:
 
-## Tournament Submission Process
+1. **Start with Tutorial 1**: Review [`tutorials/1. Intro.ipynb`](../tutorials/1.%20Intro.ipynb) to understand the basics
+2. **Learn the Challenge**: Read through [`tutorials/2. Challenge Overview.ipynb`](../tutorials/2.%20Challenge%20Overview.ipynb) to understand the competition
+3. **Create Your Strategy**: Follow [`tutorials/3. Submission_Template.ipynb`](../tutorials/3.%20Submission_Template.ipynb) to develop and test your strategy
+4. **Submit Your Strategy**: Follow the submission instructions below
+
+## Submission Process
 
 ### Step 1: Create Your Strategy File
+
+After completing the tutorials, especially Tutorial 3:
 
 ```bash
 cp strategy_template.py your_name_strategy.py
