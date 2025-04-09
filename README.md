@@ -10,9 +10,9 @@ As a tournament participant, your task is to develop and submit a custom DCA str
 
 ## How to Participate
 
-1. **Start with Tutorial 1**: Review `tutorials/1. Intro.ipynb` to understand the basics
-2. **Learn the Challenge**: Read through `tutorials/2. Challenge Overview.ipynb` to understand the competition
-3. **Create Your Strategy**: Follow `tutorials/3. Submission_Template.ipynb` to develop and test your strategy
+1. **Start with Tutorial 1**: Review [`tutorials/1. Intro.ipynb`](tutorials/1.%20Intro.ipynb) to understand the basics
+2. **Learn the Challenge**: Read through [`tutorials/2. Challenge Overview.ipynb`](tutorials/2.%20Challenge%20Overview.ipynb) to understand the competition
+3. **Create Your Strategy**: Follow [`tutorials/3. Submission_Template.ipynb`](tutorials/3.%20Submission_Template.ipynb) to develop and test your strategy
 4. **Submit Your Strategy**: Follow the submission instructions at the end of Tutorial 3
 
 ## Features
