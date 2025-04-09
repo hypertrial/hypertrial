@@ -53,7 +53,7 @@ The system detects when running in test mode and applies more relaxed resource l
 
 ### Prerequisites
 
-- Python 3.6 - 3.12
+- Python 3.6 - 3.13
 - Required packages (automatically installed when you install Hypertrial):
   - pandas
   - numpy

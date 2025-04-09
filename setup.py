@@ -39,11 +39,12 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11", 
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "License :: OSI Approved :: MIT License",
         "Topic :: Office/Business :: Financial :: Investment",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.6, <3.14",
+    python_requires=">=3.6, <4.0",
     entry_points={
         "console_scripts": [
             "hypertrial=core.main:main",
