@@ -145,8 +145,8 @@ class TestDataDownload(unittest.TestCase):
         # Call load_data
         load_data(csv_path=non_existent_path)
         
-        # Verify extract_btc_data was called with expected arguments
-        mock_extract.assert_called_once_with()
+        # Verify extract_btc_data was called with expected arguments including csv_path
+        mock_extract.assert_called_once_with(csv_path=non_existent_path)
 
 class TestExtractBTCData(unittest.TestCase):
     """Tests specifically for the extract_btc_data function."""

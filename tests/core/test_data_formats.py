@@ -142,16 +142,16 @@ class TestDataFormats:
         """Test handling of CoinMetrics API format."""
         # Create a mock module for extract_data
         mock_extract_data = MagicMock()
-        
+    
         # Setup the extract_btc_data function in the mock module
-        def mock_extract_func():
+        def mock_extract_func(csv_path=None, save_to_csv=True, timeout=30):
             df = pd.DataFrame({
                 'btc_close': [10000, 11000]
             }, index=pd.DatetimeIndex(['2020-01-01', '2020-01-02']))
             return df
-            
+    
         mock_extract_data.extract_btc_data = mock_extract_func
-        
+    
         # Mock the import system
         with patch.dict('sys.modules', {'core.data.extract_data': mock_extract_data}):
             # Need to patch the import in core.data that imports extract_btc_data
