@@ -10,10 +10,10 @@ As a tournament participant, your task is to develop and submit a custom DCA str
 
 ## How to Participate
 
-1. **Clone this repository** to your local machine
-2. **Create your strategy** in the `submit_strategies` directory
-3. **Test your strategy** against our test suite
-4. **Submit your strategy** for official tournament evaluation
+1. **Start with Tutorial 1**: Review `tutorials/1. Intro.ipynb` to understand the basics
+2. **Learn the Challenge**: Read through `tutorials/2. Challenge Overview.ipynb` to understand the competition
+3. **Create Your Strategy**: Follow `tutorials/3. Submission_Template.ipynb` to develop and test your strategy
+4. **Submit Your Strategy**: Follow the submission instructions at the end of Tutorial 3
 
 ## Features
 
@@ -84,13 +84,12 @@ pip install -e .  # Install in development mode
 
 ### Tournament Submission Process
 
-1. Look at the example strategy in `submit_strategies/dynamic_dca_50ma.py`
-2. Create a new Python file in the `submit_strategies` directory
-3. Copy the template from `submit_strategies/strategy_template.py`
-4. Implement your strategy following the provided structure
-5. Test your strategy using the commands below
+1. Open and follow the instructions in the `tutorials/3. Submission_Template.ipynb` notebook. This notebook serves as the template and guide for creating your strategy.
+2. Implement your strategy logic within the notebook environment.
+3. Test your strategy using the code provided within the notebook.
+4. Follow the instructions in the notebook to extract your final strategy code into a Python file for submission.
 
-For detailed submission instructions, see [submit_strategies/STRATEGIES.md](submit_strategies/STRATEGIES.md).
+For detailed submission instructions, see the final sections of the `tutorials/3. Submission_Template.ipynb` notebook.
 
 ### Verifying Your Submission
 
@@ -150,17 +149,14 @@ python -m core.data.extract_data
 
 ### 3. Create Your Strategy
 
-Create a new file in the `submit_strategies` directory:
+Follow the steps outlined in the `tutorials/3. Submission_Template.ipynb` notebook. This interactive notebook will guide you through:
 
-```bash
-cp submit_strategies/strategy_template.py submit_strategies/my_strategy.py
-```
-
-Edit your strategy file following the template structure. Be sure to:
-
-- Implement the `construct_features` and `compute_weights` methods
-- Register your strategy with a unique name using `@register_strategy`
-- Document your strategy approach in the class docstring
+- Understanding the required strategy structure.
+- Implementing the `construct_features` and `compute_weights` methods.
+- Registering your strategy with a unique name using `@register_strategy`.
+- Documenting your strategy approach.
+- Testing your strategy locally.
+- Extracting your final strategy code into a `.py` file for submission.
 
 ### 4. Verify Your Strategy
 
@@ -205,22 +201,25 @@ For the tournament:
   - `plots.py`: Visualization functions for strategy performance
   - `config.py`: Configuration parameters for the backtest
   - `security/`: Security verification and resource monitoring system
-- `submit_strategies/`: **Directory for tournament submissions**
-  - `strategy_template.py`: Template to use for your submission
-  - `STRATEGIES.md`: Detailed tournament submission instructions
+- `tutorials/`: Jupyter notebooks providing guidance and the submission template.
+  - `1. Intro.ipynb`: Introduction to the platform.
+  - `2. Challenge Overview.ipynb`: Details about the competition.
+  - `3. Submission_Template.ipynb`: **Notebook for creating and testing your strategy.**
+- `submit_strategies/`: **Directory for final tournament submissions (exported .py files)**
+  - `STRATEGIES.md`: Detailed tournament submission instructions (supplements the notebook).
 - `tests/`: Test suite
-  - `test_submit_strategies.py`: Tests to verify your submission
+  - `test_submit_strategies.py`: Tests to verify your final submission file.
   - `test_security.py`: Tests for the security system
   - `TESTS.md`: Detailed testing information
 - `results/`: Directory where strategy comparison results are stored
 
 ## Tournament Rules and Guidelines
 
-1. Your strategy must be implemented in a single Python file within `submit_strategies/`
-2. You may not modify any code in the `core/` directory
-3. Your strategy must pass all tests in `tests/test_submit_strategies.py`
-4. Your strategy should be appropriately documented
-5. External data sources are allowed, but your strategy must fit the structure in `strategy_template.py`
+1. Your strategy must be developed using the `tutorials/3. Submission_Template.ipynb` notebook and submitted as a single Python file within `submit_strategies/` after extraction.
+2. You may not modify any code in the `core/` directory.
+3. Your final submitted strategy file must pass all tests in `tests/test_submit_strategies.py`.
+4. Your strategy should be appropriately documented within the notebook and the extracted file.
+5. External data sources are allowed, but your strategy must fit the structure defined in the `tutorials/3. Submission_Template.ipynb` notebook.
 6. Strategies will be ranked by their mean excess SPD percentile compared to uniform DCA
 
 ## Configuration
