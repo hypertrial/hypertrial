@@ -15,6 +15,11 @@ setup(
     url="https://github.com/hypertrial/hypertrial",
     packages=find_packages(),
     include_package_data=True,
+    project_urls={
+        "Bug Tracker": "https://github.com/hypertrial/hypertrial/issues",
+        "Documentation": "https://github.com/hypertrial/hypertrial#readme",
+        "Source Code": "https://github.com/hypertrial/hypertrial",
+    },
     install_requires=[
         "pandas>=1.3.0",
         "numpy>=1.20.0",
