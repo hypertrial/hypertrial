@@ -49,7 +49,6 @@ results = backtest_dynamic_dca(btc_df, strategy_name="my_custom_strategy")
 - **Cross-Cycle Analysis**: Test strategies under different market conditions
 - **Visualization Tools**: Built-in plotting for strategy weights and performance metrics
 - **Security Verification**: Comprehensive security system for submitted strategies
-- **External Data Support**: Securely incorporate external data sources in your strategies
 - **Tournament Platform**: Submit and compare your strategies against others
 
 ## Command Line Interface
@@ -65,6 +64,21 @@ hypertrial --strategy dynamic_dca
 
 # Run backtest for all strategies
 hypertrial --backtest-all --output-dir results
+
+# Backtest multiple strategy files from custom paths
+hypertrial --strategy-files path/to/strategy1.py path/to/strategy2.py --output-dir results
+
+# Backtest all Python files in a directory
+hypertrial --strategy-dir path/to/strategies/dir --output-dir results
+
+# Backtest files matching a glob pattern
+hypertrial --glob-pattern "strategies/batch_*.py" --output-dir results
+
+# Process many strategies in parallel
+hypertrial --strategy-dir strategies/ --processes 4 --output-dir results
+
+# Process large sets of strategies in batches to manage memory
+hypertrial --glob-pattern "*.py" --batch-size 10 --output-dir results
 
 # Disable plots during backtest
 hypertrial --strategy my_strategy --no-plots

@@ -11,7 +11,7 @@ setup(
     long_description=open(readme_path).read(),
     long_description_content_type="text/markdown",
     author="Matt Faltyn",
-    author_email="faltyn.matthew@gmail.com",
+    author_email="matt@trilemmacapital.com",
     url="https://github.com/hypertrial/hypertrial",
     packages=find_packages(),
     include_package_data=True,

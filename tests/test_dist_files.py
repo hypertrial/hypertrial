@@ -141,9 +141,9 @@ class TestDistributionFiles(unittest.TestCase):
             self.assertIn('[console_scripts]', entry_points_content)
             # Account for possible whitespace variations
             self.assertTrue(
-                'hypertrial=core.main:main' in entry_points_content or 
-                'hypertrial = core.main:main' in entry_points_content,
-                "Entry point 'hypertrial=core.main:main' not found in entry_points.txt"
+                'hypertrial=core.cli:cli_main' in entry_points_content or 
+                'hypertrial = core.cli:cli_main' in entry_points_content,
+                "Entry point 'hypertrial=core.cli:cli_main' not found in entry_points.txt"
             )
     
     def test_wheel_validation(self):

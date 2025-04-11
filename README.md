@@ -113,6 +113,21 @@ python -m core.main --strategy-file path/to/my_strategy.py
 # Run backtest for all registered strategies
 python -m core.main --backtest-all --output-dir results
 
+# Backtest multiple strategy files from custom paths
+python -m core.main --strategy-files path/to/strategy1.py path/to/strategy2.py --output-dir results
+
+# Backtest all Python files in a directory
+python -m core.main --strategy-dir path/to/strategies/dir --output-dir results
+
+# Backtest files matching a glob pattern
+python -m core.main --glob-pattern "strategies/batch_*.py" --output-dir results
+
+# Process many strategies in parallel (4 processes)
+python -m core.main --strategy-dir strategies/ --processes 4 --output-dir results
+
+# Process large sets of strategies in batches of 10 to manage memory
+python -m core.main --glob-pattern "*.py" --batch-size 10 --output-dir results
+
 # Disable plots during backtest
 python -m core.main --strategy my_strategy --no-plots
 ```
@@ -288,7 +303,7 @@ For the tournament:
 2. You may not modify any code in the `core/` directory.
 3. Your final submitted strategy file must pass all tests in `tests/test_submit_strategies.py`.
 4. Your strategy should be appropriately documented within the notebook and the extracted file.
-5. External data sources are allowed, but your strategy must fit the structure defined in the `tutorials/3. Submission_Template.ipynb` notebook.
+5. External data sources are not allowed. Strategies can only use the provided Bitcoin price data.
 6. Strategies will be ranked by their mean excess SPD percentile compared to uniform DCA
 
 ## Configuration

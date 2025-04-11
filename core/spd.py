@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from core.config import BACKTEST_START, BACKTEST_END
 from core.strategies import get_strategy, list_strategies
 import os
+import logging
 
 def compute_cycle_spd(df, strategy_name):
     df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
@@ -102,6 +103,10 @@ def plot_spd_comparison(df_res, strategy_name):
     plt.show()
 
 def backtest_dynamic_dca(df, strategy_name="dynamic_dca", show_plots=True):
+    # Log backtest date range
+    logger = logging.getLogger(__name__)
+    logger.info(f"Running backtest from {BACKTEST_START} to {BACKTEST_END}")
+    
     df_res = compute_cycle_spd(df, strategy_name)
     
     # Calculate metrics with vectorized operations
@@ -190,6 +195,9 @@ def compute_spd_metrics(df, weights, strategy_name="custom_strategy"):
     Returns:
         dict: SPD metrics including cycle comparisons with uniform DCA
     """
+    logger = logging.getLogger(__name__)
+    logger.info(f"Computing SPD metrics for '{strategy_name}' from {BACKTEST_START} to {BACKTEST_END}")
+    
     df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
     weights = weights.fillna(0).clip(lower=0)
     
@@ -288,6 +296,10 @@ def standalone_plot_comparison(df, weights, strategy_name="custom_strategy", sav
     Returns:
         pd.DataFrame: DataFrame with plot data
     """
+    # Log backtest date range
+    logger = logging.getLogger(__name__)
+    logger.info(f"Running standalone backtest comparison from {BACKTEST_START} to {BACKTEST_END}")
+    
     # Calculate metrics
     metrics = compute_spd_metrics(df, weights, strategy_name)
     

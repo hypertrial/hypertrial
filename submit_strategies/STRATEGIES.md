@@ -255,8 +255,6 @@ For better tournament performance:
 - Use vectorized operations (pandas/numpy) instead of loops
 - Avoid iterating over rows when possible
 - Pre-calculate values that are used multiple times
-- Include error handling for external API calls
-- Consider caching external data to avoid redundant API calls
 
 ### Strategy Ideas for the Tournament
 
@@ -269,14 +267,12 @@ Consider these approaches for your tournament strategy:
 - Drawdown-based allocation
 - Volatility-adjusted weighting
 - Seasonality patterns
-- External market correlations (stocks, gold, etc.)
-- On-chain metrics (if available via API)
 
 ## Tournament Rules
 
 1. Your strategy must be self-contained in a single Python file
 2. Your strategy must follow the structure defined in `strategy_template.py`
-3. External data sources are allowed, but you must include all API code and keys in your submission
+3. External data sources are not allowed (strategies can only use the provided BTC price data)
 4. Your strategy must complete execution in a reasonable time
 5. You must not modify or depend on changes to the core framework
 6. All entries must pass the test suite to qualify
@@ -309,7 +305,7 @@ The system detects when it's running in test mode vs. production mode:
 
 ### Network Restrictions
 
-- **Limited external data access** - Only `pandas_datareader` is allowed
+- **No external data access** - No external APIs or data sources are allowed
 - **No direct HTTP requests** - The `requests` library is blocked
 - **No socket operations** - The `socket` module is blocked
 
@@ -449,11 +445,6 @@ The following issues frequently cause strategies to be rejected:
    - Empty `try-except` blocks that hide errors
    - Catching all exceptions without specific handling
    - Suppressing security-relevant errors
-
-5. **Unsafe External API Calls**
-   - Not validating URLs before requests
-   - Missing timeout parameters
-   - No error handling for API failures
 
 When your strategy is rejected due to security issues, check the error message which will contain:
 

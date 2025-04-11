@@ -24,11 +24,6 @@ class NewStrategy(StrategyTemplate):
     - What market conditions it works best in
     - Any theoretical basis for the approach
     - Expected performance characteristics
-    
-    If using external data sources, include:
-    - What external data sources are used
-    - How they are integrated with BTC price data
-    - Why they are relevant to your strategy
     """
     
     @staticmethod
@@ -75,31 +70,6 @@ class NewStrategy(StrategyTemplate):
         # 5. Binary indicators
         # df['below_ma'] = (df['btc_close'] < df['ma_50']).astype(int)
         
-        # EXTERNAL DATA INTEGRATION (if using external data sources):
-        # -----------------------------------------------------------
-        # try:
-        #     # Include your API code directly in this method
-        #     import pandas_datareader as pdr
-        #     
-        #     # Get date range from input dataframe for API call
-        #     start_date = df.index.min()
-        #     end_date = df.index.max()
-        #     
-        #     # Retrieve external data (e.g. gold prices)
-        #     gold_data = pdr.get_data_yahoo('GLD', start_date, end_date)
-        #     
-        #     # Reindex to match BTC price dates and handle missing values
-        #     gold_data = gold_data.reindex(df.index, method='ffill')
-        #     df['gold_price'] = gold_data['Close']
-        #     
-        #     # Calculate features using external data
-        #     df['btc_gold_ratio'] = df['btc_close'] / df['gold_price']
-        # 
-        # except Exception as e:
-        #     print(f"Warning: Failed to retrieve external data: {e}")
-        #     # Always provide fallback behavior when external data is unavailable
-        #     df['btc_gold_ratio'] = 1.0  # Some reasonable default
-        
         return df
     
     @staticmethod
@@ -144,12 +114,6 @@ class NewStrategy(StrategyTemplate):
         # Q4_months = [10, 11, 12]
         # weights[df_backtest.index.month.isin(Q4_months)] = 2.0  # Higher weight in Q4
         
-        # 6. External data-based weighting (if using external data)
-        # if 'btc_gold_ratio' in df_backtest.columns:
-        #     # More weight when BTC is undervalued relative to gold
-        #     weights = 1.0 + (df_backtest['btc_gold_ratio'].mean() - df_backtest['btc_gold_ratio']) / df_backtest['btc_gold_ratio'].std()
-        #     weights = weights.clip(lower=0.1)  # Ensure minimum weight
-        
         # NORMALIZE WEIGHTS BY CYCLE - THIS IS REQUIRED
         # ----------------------------------------------
         # Group by 4-year cycles and normalize weights within each cycle
@@ -170,6 +134,5 @@ class NewStrategy(StrategyTemplate):
 # def my_strategy(df: pd.DataFrame) -> pd.Series:
 #     """
 #     Brief description of your strategy that will appear in --list output.
-#     If using external data, mention it here.
 #     """
 #     return NewStrategy.get_strategy_function()(df) 
