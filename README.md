@@ -130,6 +130,30 @@ python -m core.main --glob-pattern "*.py" --batch-size 10 --output-dir results
 
 # Disable plots during backtest
 python -m core.main --strategy my_strategy --no-plots
+
+Key features of the command line interface:
+
+- `--list`: List all available strategies
+- `--strategy`: Run backtest with a specific strategy
+- `--strategy-file`: Test a single strategy file
+- `--standalone`: Run a strategy file in isolation without loading other strategies
+- `--backtest-all`: Run backtest for all registered strategies
+- `--strategy-files`: Backtest multiple strategy files from custom paths
+- `--strategy-dir`: Backtest all Python files in a directory
+- `--glob-pattern`: Backtest files matching a glob pattern
+- `--processes`: Process many strategies in parallel (specify number of processes)
+- `--batch-size`: Process large sets of strategies in batches to manage memory
+- `--no-plots`: Disable plots during backtest
+- `--output-dir`: Specify output directory for results
+- `--data-file`: Specify a custom data file
+- `--download-data`: Force download of fresh BTC price data
+- `--save-plots`: Save plots to files instead of displaying them
+- `--recursive`: Search directories recursively when using --strategy-dir
+- `--exclude-dirs`: Exclude specific directories from search
+- `--exclude-patterns`: Exclude files matching specific patterns
+- `--include-patterns`: Include only files matching specific patterns
+- `--max-files`: Limit the number of files to process
+- `--file-timeout`: Specify timeout (in seconds) for processing each file
 ```
 
 ### Standalone Strategy Testing
@@ -195,84 +219,7 @@ pytest tests/test_submit_strategies.py
 python -m core.main --backtest-all --output-dir results
 ```
 
-## Complete Submission Workflow
-
-### 1. Set Up Environment and Install
-
-```bash
-# Create and activate virtual environment
-python -m venv hypertrial_venv
-source hypertrial_venv/bin/activate  # On Windows: hypertrial_venv\Scripts\activate
-
-# Install from PyPI
-pip install hypertrial
-
-# Or install from source
-git clone https://github.com/mattfaltyn/hypertrial.git
-cd hypertrial
-pip install -e .
-```
-
-### 2. Prepare the Data
-
-Extract and prepare the Bitcoin price data:
-
-```bash
-python -m core.data.extract_data
-```
-
-### 3. Create Your Strategy
-
-Follow the steps outlined in the `tutorials/3. Submission_Template.ipynb` notebook. This interactive notebook will guide you through:
-
-- Understanding the required strategy structure.
-- Implementing the `construct_features` and `compute_weights` methods.
-- Registering your strategy with a unique name using `@register_strategy`.
-- Documenting your strategy approach.
-- Testing your strategy locally.
-- Extracting your final strategy code into a `.py` file for submission.
-
-### 4. Test During Development
-
-During strategy development, use the standalone mode for rapid testing:
-
-```bash
-# Test your strategy directly without adding it to the project
-python -m core.main --strategy-file path/to/my_strategy.py --standalone
-```
-
-### 5. Verify Your Final Strategy
-
-Once your strategy is ready, place it in the `submit_strategies` directory and run the test suite:
-
-```bash
-pytest tests/test_submit_strategies.py
-```
-
-### 6. Test Your Strategy's Performance
-
-Evaluate how your strategy performs:
-
-```bash
-python -m core.main --strategy my_strategy
-```
-
-### 7. Compare Against Other Strategies
-
-See how your strategy ranks against baseline strategies:
-
-```bash
-python -m core.main --backtest-all --output-dir results
-```
-
-### 8. Submit Your Strategy
-
-For the tournament:
-
-1. Fork the repository
-2. Add your strategy to the `submit_strategies` directory
-3. Run tests to verify it works correctly
-4. Submit a pull request with ONLY your strategy file in the `submit_strategies` directory
+5. Submit a pull request with ONLY your strategy file in the `submit_strategies` directory
 
 ## Project Structure
 

@@ -167,7 +167,6 @@ Your strategy may only import from these modules:
 - `typing` (type annotations)
 - `core.config`, `core.strategies`, `core.strategies.base_strategy` (framework modules)
 - `submit_strategies` (your strategy modules)
-- `pandas_datareader` (for external data)
 
 Limited access to the `os` module is permitted, but only for specific path operations.
 
@@ -264,13 +263,16 @@ def get_external_data(start_date, end_date):
         return None
 ```
 
+### External Data Restriction
+
+External data sources are not allowed in strategies. Strategies can only use the provided Bitcoin price data. Any attempts to access external APIs or data sources will result in immediate rejection of your strategy.
+
 ### Passing Tournament Requirements
 
 For your strategy to qualify for the tournament, it must:
 
 - Be located in the `submit_strategies` directory
 - Use the `@register_strategy` decorator with a unique name
-- Return a valid pandas Series containing weights for each date
 - Have non-negative weights
 - Handle the backtest date range properly
 - Not modify the input data in harmful ways
@@ -280,14 +282,11 @@ For your strategy to qualify for the tournament, it must:
 
 ## Troubleshooting Your Tournament Submission
 
-If your strategy fails any tests, here's how to diagnose and fix common issues:
-
 ### Strategy Not Found
 
 If your strategy isn't being discovered:
 
 - Ensure your file is in the `submit_strategies` directory
-- Check that you've used the `@register_strategy` decorator correctly
 - Verify your strategy name is unique and valid
 - Make sure your strategy function returns the result of `YourClass.get_strategy_function()(df)`
 
@@ -303,14 +302,6 @@ If your strategy fails during execution:
 
 ### Security Violations
 
-If your strategy fails due to security issues:
-
-- Check you're only importing allowed modules
-- Ensure your code doesn't exceed complexity limits
-- Remove any use of dangerous functions (`eval`, `exec`, `os.system`, etc.)
-- Verify you're using only approved external data sources
-- Ensure your code doesn't contain infinite loops or deep recursion
-- Check that your strategy completes within time and memory limits
 - Note that test mode allows certain operations that would be blocked in production
 
 ### API and External Data Issues
@@ -342,7 +333,6 @@ If your strategy runs but performs poorly:
 - Make sure your strategy logic is sound
 - Verify your normalization logic works as expected
 - Cache external data to avoid repeated API calls
-- Ensure your code doesn't approach resource limits
 
 ## Detailed Test Structure
 
