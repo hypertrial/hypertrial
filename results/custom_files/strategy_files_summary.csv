@@ -1,2 +1,0 @@
-strategy,strategy_file,min_spd,max_spd,avg_spd,median_spd,min_excess_pct,max_excess_pct,avg_excess_pct,median_excess_pct,bandit_threat
-dynamic_dca_50ma,/Users/mattfaltyn/Desktop/hypertrial/submit_strategies/dynamic_dca_50ma.py,3239.5001201662362,628161.0250598273,218954.37365709044,25462.59579127777,0.564512071027508,7.143792128375182,3.3488501550716134,2.338246265812151,"{'high_threat_count': 0, 'medium_threat_count': 0, 'low_threat_count': 0, 'total_threat_count': 0}"
