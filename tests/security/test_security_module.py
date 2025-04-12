@@ -95,4 +95,74 @@ def test_security_module_imports():
     ]
     
     for symbol in expected_symbols:
-        assert hasattr(core.security, symbol), f"Symbol {symbol} not exported from core.security" 
+        assert hasattr(core.security, symbol), f"Symbol {symbol} not exported from core.security"
+
+
+def test_analyze_ast_additional_cases():
+    """Test additional edge cases in analyze_ast method"""
+    from core.security import SecurityError
+    from core.security.strategy_security import StrategySecurity
+    
+    # Test handling of external data access using a direct DataFrame write operation
+    external_data_code = """
+import pandas as pd
+df = pd.DataFrame()
+df.to_json('output.json')  # This is a banned write operation
+"""
+    try:
+        StrategySecurity.analyze_ast(external_data_code)
+        assert False, "Should raise SecurityError for DataFrame write operation"
+    except SecurityError:
+        pass
+
+    # Test handling of DataFrame write operations
+    dataframe_write_code = """
+import pandas as pd
+df = pd.DataFrame()
+df.to_excel('output.xlsx')  # This is a banned write operation
+"""
+    try:
+        StrategySecurity.analyze_ast(dataframe_write_code)
+        assert False, "Should raise SecurityError for DataFrame write operation"
+    except SecurityError:
+        pass
+    
+    # Test forbidden module imports that are explicitly banned
+    forbidden_import_code = """
+import subprocess
+subprocess.call(['ls'])
+"""
+    try:
+        StrategySecurity.analyze_ast(forbidden_import_code)
+        assert False, "Should raise SecurityError for forbidden module import"
+    except SecurityError:
+        pass
+
+
+def test_validate_external_data_additional_cases():
+    """Test additional edge cases for validate_external_data method"""
+    from core.security import SecurityError
+    from core.security.strategy_security import StrategySecurity
+    
+    # Test valid URL
+    valid_url = "https://api.coinmetrics.io/v4/timeseries/asset-metrics"
+    try:
+        StrategySecurity.validate_external_data(valid_url)
+    except SecurityError:
+        assert False, "Should not raise SecurityError for allowed domain"
+    
+    # Test invalid protocol
+    invalid_protocol_url = "file:///etc/passwd"
+    try:
+        StrategySecurity.validate_external_data(invalid_protocol_url)
+        assert False, "Should raise SecurityError for invalid protocol"
+    except SecurityError:
+        pass
+    
+    # Test suspicious URL patterns
+    suspicious_url = "https://example.com/..%2f..%2fetc/passwd"
+    try:
+        StrategySecurity.validate_external_data(suspicious_url)
+        assert False, "Should raise SecurityError for suspicious URL pattern"
+    except SecurityError:
+        pass 

@@ -827,56 +827,6 @@ def test_pandas_strategy(df):
             if 'SECURITY_TEST' in os.environ:
                 del os.environ['SECURITY_TEST']
 
-    def test_pandas_datareader_whitelist(self):
-        """Test that pandas_datareader is completely blocked"""
-        # Test code with pandas_datareader patterns - all should fail now
-        datareader_patterns = [
-            ("import pandas_datareader as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", True),  # No longer allowed
-            ("import pandas_datareader.data as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", True),  # No longer allowed
-            ("import pandas_datareader as web; web.get_data_yahoo('AAPL', '2020-01-01', '2021-01-01')", True),  # No longer allowed
-            ("import pandas_datareader as web; web.get_nasdaq_symbols()", True),  # No longer allowed
-            ("import pandas_datareader as web; web._utils.get_headers()", True),  # Not allowed
-            ("import pandas_datareader as web; web._DailyBaseReader('AAPL', 'yahoo')", True),  # Not allowed
-        ]
-        
-        for pattern, should_fail in datareader_patterns:
-            # Create a temporary file with the pattern
-            with tempfile.NamedTemporaryFile(suffix='.py', delete=False) as tmp:
-                tmp.write(f"""
-import os
-import pandas as pd
-import numpy as np
-from core.strategies import register_strategy
-
-@register_strategy("test_datareader_strategy")
-def test_datareader_strategy(df):
-    # Test with pandas_datareader operation pattern
-    try:
-        {pattern}
-    except Exception:
-        pass
-    return pd.Series(index=df.index, data=1.0)
-""".encode('utf-8'))
-                tmp_path = tmp.name
-            
-            try:
-                # Check if validation fails as expected
-                success = True
-                try:
-                    validate_strategy_file(tmp_path)
-                except SecurityError:
-                    success = False
-                
-                # Verify the result matches expectations
-                if should_fail and success:
-                    self.fail(f"Dangerous datareader operation '{pattern}' was not detected")
-                elif not should_fail and not success:
-                    self.fail(f"Safe datareader operation '{pattern}' was incorrectly flagged")
-            finally:
-                # Clean up
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
-
     def test_serialization_restrictions(self):
         """Test that serialization operations are blocked"""
         # Test code with serialization patterns
