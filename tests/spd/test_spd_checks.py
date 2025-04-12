@@ -135,6 +135,107 @@ def test_backtest_dynamic_dca(mock_get_strategy, sample_price_data, mock_strateg
     assert 'Dynamic SPD Percentile:' in captured.out
     assert 'Excess SPD Percentile Difference' in captured.out
 
+@patch('core.spd_checks.get_strategy')
+@patch('core.spd_checks.compute_cycle_spd')
+def test_backtest_dynamic_dca_with_validation_results(sample_price_data, mock_strategies, capsys, monkeypatch):
+    """Test that backtest_dynamic_dca includes validation results in its output dataframe."""
+    # Create a mock validation function
+    validation_called = False
+    original_results = {}
+    
+    # Save the original function
+    from core.spd_checks import check_strategy_submission_ready as original_check
+    
+    # Create a replacement function that tracks calls
+    def mock_check(df, strategy_name, return_details=False):
+        nonlocal validation_called
+        nonlocal original_results
+        
+        # Record that we were called with return_details=True
+        validation_called = True
+        assert return_details is True, "return_details should be True"
+        
+        # Return mock validation results
+        original_results = {
+            'validation_passed': True,
+            'has_negative_weights': False,
+            'has_below_min_weights': False,
+            'weights_not_sum_to_one': False,
+            'underperforms_uniform': False,
+            'is_forward_looking': False,
+            'validation_error': '',
+            'cycle_issues': {}
+        }
+        return original_results
+    
+    # Patch the function
+    monkeypatch.setattr("core.spd_checks.check_strategy_submission_ready", mock_check)
+    
+    # Mock compute_cycle_spd to return test data
+    def mock_compute(df, strategy_name):
+        # Return a DataFrame with consistent test data
+        return pd.DataFrame({
+            'min_spd': [500.0, 600.0],
+            'max_spd': [1500.0, 1600.0],
+            'uniform_spd': [900.0, 1000.0],
+            'dynamic_spd': [1000.0, 1100.0],
+            'uniform_pct': [40.0, 40.0],
+            'dynamic_pct': [50.0, 50.0],
+            'excess_pct': [10.0, 10.0]
+        }, index=['2013-2016', '2017-2020'])
+    
+    # Patch the compute_cycle_spd function
+    monkeypatch.setattr("core.spd.compute_cycle_spd", mock_compute)
+    
+    # Run backtest_dynamic_dca
+    from core.spd import backtest_dynamic_dca
+    result = backtest_dynamic_dca(sample_price_data, 'valid_strategy', show_plots=False)
+    
+    # Check that our validation function was called
+    assert validation_called, "check_strategy_submission_ready was not called"
+    
+    # Check that validation results are in the output dataframe
+    assert 'validation_passed' in result.columns
+    assert result['validation_passed'].iloc[0] == True
+    assert 'has_negative_weights' in result.columns
+    assert result['has_below_min_weights'].iloc[0] == False
+    assert 'weights_not_sum_to_one' in result.columns
+    assert 'underperforms_uniform' in result.columns
+    assert 'is_forward_looking' in result.columns
+    
+    # Now test with failing validation
+    def mock_check_fail(df, strategy_name, return_details=False):
+        nonlocal validation_called
+        validation_called = True
+        
+        # Return mock validation results with a failure
+        return {
+            'validation_passed': False,
+            'has_negative_weights': True,
+            'has_below_min_weights': False,
+            'weights_not_sum_to_one': False,
+            'underperforms_uniform': False,
+            'is_forward_looking': False,
+            'validation_error': '',
+            'cycle_issues': {'2013-2016': {'has_negative_weights': True}}
+        }
+    
+    # Replace the check function with our new version that fails
+    monkeypatch.setattr("core.spd_checks.check_strategy_submission_ready", mock_check_fail)
+    
+    # Reset tracking
+    validation_called = False
+    
+    # Run backtest_dynamic_dca again
+    result = backtest_dynamic_dca(sample_price_data, 'valid_strategy', show_plots=False)
+    
+    # Check that our validation function was called
+    assert validation_called, "check_strategy_submission_ready was not called on second run"
+    
+    # Check that negative validation results are in the output dataframe
+    assert result['validation_passed'].iloc[0] == False
+    assert result['has_negative_weights'].iloc[0] == True
+
 # Mock the check_strategy_submission_ready function to avoid complex calculations 
 # and focus on testing the interface and result reporting
 @patch('core.spd_checks.get_strategy')
@@ -297,4 +398,48 @@ def test_validation_error_handling(mock_get_strategy, sample_price_data, capsys)
     # Assertions
     assert result is False
     assert "⚠️ Forward-looking check failed due to an error" in captured.out
-    assert "⚠️ Fix the issues above before submission" in captured.out 
+    assert "⚠️ Fix the issues above before submission" in captured.out
+
+@patch('core.spd_checks.get_strategy')
+@patch('core.spd_checks.compute_cycle_spd')
+def test_check_strategy_submission_ready_with_return_details(mock_compute_cycle_spd, mock_get_strategy, sample_price_data, mock_strategies):
+    """Test strategy validation with return_details parameter returning the detailed validation results."""
+    # Setup mocks
+    mock_get_strategy.return_value = mock_strategies['valid_strategy']
+    
+    # Mock compute_cycle_spd to return a DataFrame with values that will pass validation
+    mock_df = pd.DataFrame({
+        'uniform_pct': [50.0, 50.0],
+        'dynamic_pct': [60.0, 60.0],  # Better than uniform
+    }, index=['2013-2016', '2017-2020'])
+    mock_compute_cycle_spd.return_value = mock_df
+    
+    # Run validation with return_details=True
+    result = check_strategy_submission_ready(sample_price_data, 'valid_strategy', return_details=True)
+    
+    # Assertions for a valid strategy
+    assert isinstance(result, dict)
+    assert result['validation_passed'] is True
+    assert result['has_negative_weights'] is False
+    assert result['has_below_min_weights'] is False
+    assert result['weights_not_sum_to_one'] is False
+    assert result['underperforms_uniform'] is False
+    assert result['is_forward_looking'] is False
+    assert result['validation_error'] == ''
+    assert 'cycle_issues' in result
+    assert isinstance(result['cycle_issues'], dict)
+    assert len(result['cycle_issues']) == 0  # Empty for valid strategy
+    
+    # Now test with an invalid strategy
+    mock_get_strategy.return_value = mock_strategies['negative_weights_strategy']
+    
+    # Run validation with return_details=True
+    result = check_strategy_submission_ready(sample_price_data, 'negative_weights_strategy', return_details=True)
+    
+    # Assertions for an invalid strategy
+    assert isinstance(result, dict)
+    assert result['validation_passed'] is False
+    assert result['has_negative_weights'] is True
+    assert 'cycle_issues' in result
+    assert isinstance(result['cycle_issues'], dict)
+    assert len(result['cycle_issues']) > 0  # Should contain cycle-specific issues 

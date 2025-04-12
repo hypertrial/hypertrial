@@ -190,5 +190,78 @@ def test_strategy2(df):
         self.assertIsInstance(result, pd.DataFrame)
         self.assertGreaterEqual(len(result), 1)  # At least one row
 
+    @patch('core.strategies.list_strategies')
+    @patch('core.strategies.get_strategy')
+    @patch('core.security.utils.get_bandit_threat_level')
+    @patch('multiprocessing.cpu_count')
+    @patch('core.spd.backtest_dynamic_dca')  # Patch the correct module
+    def test_backtest_all_strategies_with_validation_results(self, mock_backtest, mock_cpu_count, mock_bandit, mock_get, mock_list):
+        """Test that validation results from spd_checks are included in the CSV output"""
+        # Configure mocks
+        mock_list.return_value = {"test_strategy1": "Test Strategy 1"}
+        mock_get.side_effect = lambda name: lambda df: pd.Series(1.0 / len(df), index=df.index)
+        mock_cpu_count.return_value = 1  # Force sequential processing
+        
+        # Create mock validation results in the returned DataFrame
+        mock_df = pd.DataFrame({
+            'cycle': ['2013-2016'],
+            'dynamic_spd': [1000.0],
+            'uniform_spd': [900.0],
+            'excess_pct': [10.0],
+            'dynamic_pct': [80.0],
+            'validation_passed': [True],
+            'has_negative_weights': [False],
+            'has_below_min_weights': [False],
+            'weights_not_sum_to_one': [False],
+            'underperforms_uniform': [False],
+            'is_forward_looking': [False]
+        })
+        
+        mock_backtest.return_value = mock_df
+        
+        # Mock bandit results
+        mock_bandit.return_value = {
+            'high_threat_count': 0,
+            'medium_threat_count': 0,
+            'low_threat_count': 1,
+            'total_threat_count': 1
+        }
+        
+        # Create a temporary submit_strategies directory with a dummy file
+        submit_dir = os.path.join(self.temp_dir, 'submit_strategies')
+        os.makedirs(submit_dir, exist_ok=True)
+        
+        with open(os.path.join(submit_dir, 'test_strategy1.py'), 'w') as f:
+            f.write("# Dummy strategy file")
+        
+        # Call the function
+        result = backtest_all_strategies(
+            self.df,
+            self.temp_dir,
+            show_plots=False
+        )
+        
+        # Check that the validation results are included in the output
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertIn('validation_passed', result.columns)
+        self.assertIn('has_negative_weights', result.columns)
+        self.assertIn('has_below_min_weights', result.columns)
+        self.assertIn('weights_not_sum_to_one', result.columns)
+        self.assertIn('underperforms_uniform', result.columns)
+        self.assertIn('is_forward_looking', result.columns)
+        
+        # Verify CSV was created with validation results
+        csv_path = os.path.join(self.temp_dir, 'strategy_summary.csv')
+        self.assertTrue(os.path.exists(csv_path))
+        
+        # Read the CSV and check validation columns
+        csv_df = pd.read_csv(csv_path)
+        self.assertIn('validation_passed', csv_df.columns)
+        self.assertIn('has_negative_weights', csv_df.columns)
+        self.assertIn('has_below_min_weights', csv_df.columns)
+        self.assertIn('weights_not_sum_to_one', csv_df.columns)
+        self.assertIn('underperforms_uniform', csv_df.columns)
+        self.assertIn('is_forward_looking', csv_df.columns)
+
 if __name__ == "__main__":
     unittest.main() 

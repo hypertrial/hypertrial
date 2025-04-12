@@ -174,6 +174,22 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False, validate=True)
                     'low_threats': bandit_threat['low_threat_count'],
                     'total_threats': bandit_threat['total_threat_count']
                 }
+                
+                # Add validation results to summary if available
+                if 'validation_passed' in df_res:
+                    summary['validation_passed'] = df_res['validation_passed'].iloc[0]
+                    
+                    # Include specific validation checks if they exist
+                    for check in ['has_negative_weights', 'has_below_min_weights', 
+                                 'weights_not_sum_to_one', 'underperforms_uniform', 
+                                 'is_forward_looking']:
+                        if check in df_res:
+                            summary[check] = df_res[check].iloc[0]
+                    
+                    # Include error message if present
+                    if 'validation_error' in df_res:
+                        summary['validation_error'] = df_res['validation_error'].iloc[0]
+                
                 summary_results.append(summary)
             except Exception as e:
                 logger.error(f"Error processing results for strategy {strategy_name}: {str(e)}")
@@ -232,6 +248,22 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False, validate=True)
                     'low_threats': bandit_threat['low_threat_count'],
                     'total_threats': bandit_threat['total_threat_count']
                 }
+                
+                # Add validation results to summary if available
+                if 'validation_passed' in df_res:
+                    summary['validation_passed'] = df_res['validation_passed'].iloc[0]
+                    
+                    # Include specific validation checks if they exist
+                    for check in ['has_negative_weights', 'has_below_min_weights', 
+                                 'weights_not_sum_to_one', 'underperforms_uniform', 
+                                 'is_forward_looking']:
+                        if check in df_res:
+                            summary[check] = df_res[check].iloc[0]
+                    
+                    # Include error message if present
+                    if 'validation_error' in df_res:
+                        summary['validation_error'] = df_res['validation_error'].iloc[0]
+                
                 summary_results.append(summary)
             except Exception as e:
                 logger.error(f"Error running strategy {strategy_name}: {str(e)}")

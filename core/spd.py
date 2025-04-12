@@ -138,6 +138,27 @@ def backtest_dynamic_dca(df, strategy_name="dynamic_dca", show_plots=True):
     print("\nExcess SPD Percentile Difference (Dynamic - Uniform) per Cycle:")
     for cycle, row in df_res.iterrows():
         print(f"  {cycle}: {row['excess_pct']:.2f}%")
+    
+    # Run SPD validation checks and store the results
+    from core.spd_checks import check_strategy_submission_ready
+    try:
+        # Get validation results from spd_checks
+        validation_results = check_strategy_submission_ready(df, strategy_name, return_details=True)
+        
+        # Add validation results to the dataframe as a new column
+        for key, value in validation_results.items():
+            df_res[key] = value
+        
+        # Display validation summary
+        if validation_results['validation_passed']:
+            print(f"\nStrategy '{strategy_name}' passed all validation checks.")
+        else:
+            print(f"\nStrategy '{strategy_name}' failed validation checks. See details in output CSV.")
+    except Exception as e:
+        logger.error(f"Error running validation checks: {str(e)}")
+        # Set validation fields to default values in case of error
+        df_res['validation_passed'] = False
+        df_res['validation_error'] = str(e)
 
     if show_plots:
         plot_spd_comparison(df_res, strategy_name)

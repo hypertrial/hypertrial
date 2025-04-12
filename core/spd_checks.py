@@ -88,7 +88,7 @@ def backtest_dynamic_dca(df, strategy_name="dynamic_dca"):
     
     return df_res
 
-def check_strategy_submission_ready(df, strategy_name):
+def check_strategy_submission_ready(df, strategy_name, return_details=False):
     df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
     cycle_length = pd.DateOffset(years=4)
     current = df_backtest.index.min()
@@ -97,6 +97,17 @@ def check_strategy_submission_ready(df, strategy_name):
     full_weights = weight_fn(df).fillna(0)
 
     passed = True
+    validation_results = {
+        'validation_passed': True,
+        'has_negative_weights': False,
+        'has_below_min_weights': False,
+        'weights_not_sum_to_one': False,
+        'underperforms_uniform': False,
+        'is_forward_looking': False,
+        'validation_error': ''
+    }
+    
+    cycle_issues = {}
 
     # --- Criteria 1–3: per-cycle checks ---
     while current <= df_backtest.index.max():
@@ -107,31 +118,46 @@ def check_strategy_submission_ready(df, strategy_name):
         w_slice = full_weights.loc[cycle.index]
 
         cycle_label = f"{current.year}–{end_date.year}"
+        cycle_issues[cycle_label] = {}
 
         # Criterion 1: strictly positive
         if (w_slice <= 0).any():
             print(f"[{cycle_label}] ❌ Some weights are zero or negative.")
             passed = False
+            validation_results['has_negative_weights'] = True
+            cycle_issues[cycle_label]['has_negative_weights'] = True
 
         # Criterion 2: above minimum threshold
         if (w_slice < MIN_WEIGHT).any():
             print(f"[{cycle_label}] ❌ Some weights are below MIN_WEIGHT = {MIN_WEIGHT}.")
             passed = False
+            validation_results['has_below_min_weights'] = True
+            cycle_issues[cycle_label]['has_below_min_weights'] = True
 
         # Criterion 3: weights must sum to 1 over the entire cycle
         total_weight = w_slice.sum().sum() if isinstance(w_slice, pd.DataFrame) else w_slice.sum()
         if not np.isclose(total_weight, 1.0, rtol=1e-5, atol=1e-8):
             print(f"[{cycle_label}] ❌ Total weights across the cycle do not sum to 1 (sum = {total_weight:.6f}).")
             passed = False
+            validation_results['weights_not_sum_to_one'] = True
+            cycle_issues[cycle_label]['weights_not_sum_to_one'] = True
+            cycle_issues[cycle_label]['weight_sum'] = float(total_weight)
 
         current += cycle_length
 
     # --- Criterion 4: SPD performance must be ≥ uniform ---
     spd_results = compute_cycle_spd(df, strategy_name)
     for cycle, row in spd_results.iterrows():
+        if cycle not in cycle_issues:
+            cycle_issues[cycle] = {}
+            
         if row['dynamic_pct'] < row['uniform_pct']:
             print(f"[{cycle}] ❌ Dynamic SPD percentile ({row['dynamic_pct']:.2f}%) is less than uniform ({row['uniform_pct']:.2f}%).")
             passed = False
+            validation_results['underperforms_uniform'] = True
+            cycle_issues[cycle]['underperforms_uniform'] = True
+            cycle_issues[cycle]['dynamic_pct'] = float(row['dynamic_pct'])
+            cycle_issues[cycle]['uniform_pct'] = float(row['uniform_pct'])
 
     # --- Criterion 5: Strategy must be causal (not forward-looking) ---
     try:
@@ -148,14 +174,22 @@ def check_strategy_submission_ready(df, strategy_name):
         if mismatched:
             print("❌ Strategy may be forward-looking: it changes when future data is removed.")
             passed = False
+            validation_results['is_forward_looking'] = True
     except Exception as e:
         print("⚠️ Forward-looking check failed due to an error:", e)
         passed = False
+        validation_results['validation_error'] = f"Forward-looking check error: {str(e)}"
 
     # --- Final verdict ---
     if passed:
         print("✅ Strategy is ready for submission.")
     else:
         print("⚠️ Fix the issues above before submission.")
+    
+    validation_results['validation_passed'] = passed
+    validation_results['cycle_issues'] = cycle_issues if not passed else {}
+    
+    if return_details:
+        return validation_results
     
     return passed 
