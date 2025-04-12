@@ -5,11 +5,16 @@ from unittest.mock import patch, MagicMock, call
 import io
 import sys
 import matplotlib.pyplot as plt
+import os
 
 # Import the SPD calculation functions
 from core.spd import (
     backtest_dynamic_dca,
-    compute_cycle_spd
+    compute_cycle_spd,
+    plot_spd_comparison,
+    list_available_strategies,
+    compute_spd_metrics,
+    standalone_plot_comparison
 )
 
 class TestStrategySubstitution:
@@ -242,3 +247,269 @@ class TestPerformanceComparison:
         for day in highest_days:
             weights.loc[day] = weight_value
         return weights 
+
+@pytest.fixture
+def sample_spd_results():
+    """Fixture to create sample SPD results dataframe"""
+    return pd.DataFrame({
+        'min_spd': [100, 200],
+        'max_spd': [1000, 2000],
+        'uniform_spd': [300, 400],
+        'dynamic_spd': [400, 500],
+        'uniform_pct': [20, 15],
+        'dynamic_pct': [30, 20],
+        'excess_pct': [10, 5]
+    }, index=['2013–2016', '2017–2020'])
+
+@pytest.fixture
+def sample_weights():
+    """Fixture to create sample strategy weights"""
+    dates = pd.date_range(start='2013-01-01', end='2020-12-31')
+    return pd.Series(data=np.random.rand(len(dates)), index=dates)
+
+
+def test_plot_spd_comparison(sample_spd_results):
+    """Test plot_spd_comparison function"""
+    with patch('matplotlib.pyplot.show') as mock_show, \
+         patch('matplotlib.pyplot.subplots', return_value=(MagicMock(), MagicMock())) as mock_subplots, \
+         patch('matplotlib.pyplot.savefig') as mock_savefig, \
+         patch('matplotlib.pyplot.tight_layout') as mock_tight_layout:
+        
+        # Create more detailed mock axes
+        mock_fig, mock_ax1 = mock_subplots.return_value
+        mock_ax2 = MagicMock()
+        mock_ax1.twinx.return_value = mock_ax2
+        
+        # Mock the plot method to return a list of Line2D objects
+        lines_mock = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+        mock_ax1.plot.return_value = lines_mock
+        
+        # Create mock bar objects
+        bar1_mock = MagicMock()
+        bar2_mock = MagicMock()
+        mock_ax2.bar.side_effect = [bar1_mock, bar2_mock]
+        
+        # Call the function
+        plot_spd_comparison(sample_spd_results, "test_strategy")
+        
+        # Verify that show was called
+        mock_show.assert_called_once()
+        
+        # Verify subplots was called
+        mock_subplots.assert_called()
+        
+        # Verify basic plot setup
+        mock_ax1.set_title.assert_called_with("Uniform vs test_strategy DCA (SPD)")
+        mock_ax1.set_ylabel.assert_called_with('Sats per Dollar (Log Scale)')
+        mock_ax1.set_xlabel.assert_called_with("Cycle")
+        mock_ax1.grid.assert_called_with(True, linestyle='--', linewidth=0.5)
+        mock_ax1.legend.assert_called()
+        mock_ax1.set_xticks.assert_called()
+        mock_ax1.set_xticklabels.assert_called()
+        
+        # Verify plot was called
+        mock_ax1.plot.assert_called()
+        
+        # Verify second y-axis
+        mock_ax2.set_ylabel.assert_called_with('SPD Percentile (%)')
+        mock_ax2.set_ylim.assert_called_with(0, 100)
+        mock_ax2.legend.assert_called()
+
+
+def test_backtest_dynamic_dca(sample_price_data):
+    """Test backtest_dynamic_dca function"""
+    with patch('core.spd.compute_cycle_spd') as mock_compute, \
+         patch('core.spd.plot_spd_comparison') as mock_plot, \
+         patch('core.spd.logging.getLogger') as mock_getlogger:
+        
+        # Set up mock compute_cycle_spd return value
+        mock_compute.return_value = pd.DataFrame({
+            'min_spd': [100, 200],
+            'max_spd': [1000, 2000],
+            'uniform_spd': [300, 400],
+            'dynamic_spd': [400, 500],
+            'uniform_pct': [20, 15],
+            'dynamic_pct': [30, 20],
+            'excess_pct': [10, 5]
+        }, index=['2013–2016', '2017–2020'])
+        
+        # Set up mock logger
+        mock_logger = MagicMock()
+        mock_getlogger.return_value = mock_logger
+        
+        # Test with show_plots=True
+        with patch('builtins.print') as mock_print:
+            results = backtest_dynamic_dca(sample_price_data, "test_strategy", show_plots=True)
+            
+            # Verify compute_cycle_spd was called properly
+            mock_compute.assert_called_once_with(sample_price_data, "test_strategy")
+            
+            # Verify plot_spd_comparison was called
+            mock_plot.assert_called_once()
+            
+            # Verify print was called
+            assert mock_print.call_count > 0
+            
+            # Verify logger was called
+            mock_logger.info.assert_called_once()
+            
+            # Verify the returned results
+            assert isinstance(results, pd.DataFrame)
+            assert len(results) == 2
+            assert all(col in results.columns for col in ['min_spd', 'max_spd', 'uniform_spd', 'dynamic_spd', 
+                                                         'uniform_pct', 'dynamic_pct', 'excess_pct'])
+        
+        # Test with show_plots=False
+        mock_compute.reset_mock()
+        mock_plot.reset_mock()
+        mock_logger.reset_mock()
+        
+        with patch('builtins.print') as mock_print:
+            results = backtest_dynamic_dca(sample_price_data, "test_strategy", show_plots=False)
+            
+            # Verify compute_cycle_spd was called properly
+            mock_compute.assert_called_once_with(sample_price_data, "test_strategy")
+            
+            # Verify plot_spd_comparison was NOT called
+            mock_plot.assert_not_called()
+
+
+def test_list_available_strategies():
+    """Test list_available_strategies function"""
+    with patch('core.spd.list_strategies') as mock_list_strategies, \
+         patch('builtins.print') as mock_print:
+        
+        # Test with no strategies
+        mock_list_strategies.return_value = {}
+        result = list_available_strategies()
+        assert result == {}
+        mock_print.assert_called()
+        
+        # Reset mocks
+        mock_print.reset_mock()
+        
+        # Test with core strategies only
+        mock_list_strategies.return_value = {
+            'uniform_dca': 'Uniform Dollar Cost Averaging strategy',
+            'dynamic_dca': 'Dynamic Dollar Cost Averaging strategy'
+        }
+        result = list_available_strategies()
+        assert result == mock_list_strategies.return_value
+        assert mock_print.call_count > 3  # At least header + two strategies
+        
+        # Reset mocks
+        mock_print.reset_mock()
+        
+        # Test with both core and custom strategies
+        mock_list_strategies.return_value = {
+            'uniform_dca': 'Uniform Dollar Cost Averaging strategy',
+            'dynamic_dca': 'Dynamic Dollar Cost Averaging strategy',
+            'custom_strategy1': 'Custom strategy 1',
+            'custom_strategy2': 'Custom strategy 2'
+        }
+        result = list_available_strategies()
+        assert result == mock_list_strategies.return_value
+        assert mock_print.call_count > 5  # Header + section headers + four strategies
+
+
+def test_compute_spd_metrics(sample_price_data, sample_weights):
+    """Test compute_spd_metrics function"""
+    with patch('core.spd.logging.getLogger') as mock_getlogger:
+        # Set up mock logger
+        mock_logger = MagicMock()
+        mock_getlogger.return_value = mock_logger
+        
+        # Test with default parameters
+        with patch('core.spd.BACKTEST_START', '2013-01-01'), \
+             patch('core.spd.BACKTEST_END', '2020-12-31'):
+            
+            results = compute_spd_metrics(sample_price_data, sample_weights)
+            
+            # Verify logger was called
+            mock_logger.info.assert_called_once()
+            
+            # Verify the structure of the results
+            assert isinstance(results, dict)
+            assert 'cycles' in results
+            assert 'min_spd' in results
+            assert 'max_spd' in results
+            assert 'uniform_spd' in results
+            assert 'dynamic_spd' in results
+            assert 'excess_pct' in results
+            assert 'uniform_pct' in results
+            assert 'dynamic_pct' in results
+            
+            # Verify the types are correct
+            assert isinstance(results['min_spd'], (int, float, np.number))
+            assert isinstance(results['max_spd'], (int, float, np.number))
+            assert isinstance(results['mean_spd'], (int, float, np.number))
+            assert isinstance(results['median_spd'], (int, float, np.number))
+            assert isinstance(results['uniform_spd'], list)
+            assert isinstance(results['dynamic_spd'], list)
+            assert isinstance(results['uniform_pct'], list)
+            assert isinstance(results['dynamic_pct'], list)
+            assert isinstance(results['excess_pct'], list)
+            
+            # Verify there's data for each cycle
+            assert len(results['cycles']) > 0
+            assert len(results['uniform_spd']) == len(results['cycles'])
+            assert len(results['dynamic_spd']) == len(results['cycles'])
+            assert len(results['excess_pct']) == len(results['cycles'])
+
+
+def test_standalone_plot_comparison(sample_price_data, sample_weights):
+    """Test standalone_plot_comparison function"""
+    with patch('core.spd.compute_spd_metrics') as mock_compute, \
+         patch('matplotlib.pyplot.show') as mock_show, \
+         patch('matplotlib.pyplot.savefig') as mock_savefig, \
+         patch('matplotlib.pyplot.figure') as mock_figure, \
+         patch('os.makedirs') as mock_makedirs:
+        
+        # Set up mock compute_spd_metrics return value
+        mock_compute.return_value = {
+            'cycles': ['2013–2016', '2017–2020'],
+            'min_spd': [100, 200],
+            'max_spd': [1000, 2000],
+            'uniform_spd': [300, 400],
+            'dynamic_spd': [400, 500],
+            'uniform_pct': [20, 15],
+            'dynamic_pct': [30, 20],
+            'excess_pct': [10, 5]
+        }
+        
+        # Create mock figure and axes
+        mock_fig = MagicMock()
+        mock_ax1 = MagicMock()
+        mock_ax2 = MagicMock()
+        mock_figure.return_value = mock_fig
+        mock_fig.add_subplot.return_value = mock_ax1
+        mock_ax1.twinx.return_value = mock_ax2
+        
+        # Test without saving to file
+        standalone_plot_comparison(sample_price_data, sample_weights, "test_strategy", save_to_file=False)
+        
+        # Verify compute_spd_metrics was called
+        mock_compute.assert_called_once_with(sample_price_data, sample_weights, "test_strategy")
+        
+        # Verify show was called but not savefig
+        mock_show.assert_called_once()
+        mock_savefig.assert_not_called()
+        
+        # Reset mocks
+        mock_compute.reset_mock()
+        mock_show.reset_mock()
+        mock_savefig.reset_mock()
+        mock_makedirs.reset_mock()
+        
+        # Test with saving to file
+        standalone_plot_comparison(sample_price_data, sample_weights, "test_strategy", save_to_file=True, output_dir="test_dir")
+        
+        # Verify compute_spd_metrics was called
+        mock_compute.assert_called_once_with(sample_price_data, sample_weights, "test_strategy")
+        
+        # Verify makedirs was called
+        mock_makedirs.assert_called_once_with("test_dir", exist_ok=True)
+        
+        # Verify savefig was called but not show
+        mock_savefig.assert_called_once()
+        mock_show.assert_not_called() 

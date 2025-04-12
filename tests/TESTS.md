@@ -29,6 +29,7 @@ The test suite includes the following test files:
 - `test_submit_strategies.py`: Tests strategies submitted to the `submit_strategies` directory
 - `test_strategy_file.py`: Tests loading and executing standalone strategy files
 - `test_strategy_files.py`: Tests batch loading of multiple strategy files
+- `test_strategies_utils.py`: Tests utility functions for strategy handling and manipulation
 
 ### Tutorial and Example Strategy Tests
 
@@ -39,6 +40,7 @@ The test suite includes the following test files:
 
 - `test_security.py`: Main security tests for strategy validation and sandboxing
 - `test_bandit_security.py`: Tests for Bandit security analysis on submitted strategies
+- `test_security_module.py`: Tests for the security module components and functionality
 
 ### Data Tests
 
@@ -64,6 +66,7 @@ The following tests ensure comprehensive coverage of core functionality:
 - `test_plots.py`: Tests visualization functions with a non-interactive Matplotlib backend
 - `test_config.py`: Tests configuration constants and their constraints
 - `test_batch.py`: Tests batch processing of strategies and parallel execution
+- `test_batch_advanced.py`: Tests advanced batch processing capabilities and edge cases
 - `test_strategy_processor.py`: Tests strategy processing with validation and backtest integration
 - `test_strategy_loader.py`: Tests dynamic loading of strategy files with timeout handling
 - `core/test_error_handling.py`: Tests error handling and graceful failure modes
@@ -488,10 +491,10 @@ To run specific categories of tests:
 
 ```bash
 # Tournament submission tests
-pytest tests/test_submit_strategies.py tests/test_strategy_file.py
+pytest tests/test_submit_strategies.py tests/test_strategy_file.py tests/test_strategy_files.py tests/test_strategies_utils.py
 
 # Security tests
-pytest tests/test_security.py tests/test_bandit_security.py
+pytest tests/test_security.py tests/test_bandit_security.py tests/test_security_module.py
 
 # Requirements and version compatibility tests
 pytest tests/test_requirements_compatibility.py tests/test_version_constraints.py
@@ -506,10 +509,22 @@ pytest tests/core/
 pytest tests/core/strategies/
 
 # Data validation and format tests
-pytest tests/core/test_data_*.py
+pytest tests/test_data_*.py tests/core/test_data_*.py
 
 # SPD (Software Package Data) tests
 pytest tests/test_spd_*.py tests/core/test_spd_*.py
+
+# Batch processing tests
+pytest tests/test_batch.py tests/test_batch_advanced.py
+
+# Package installation and deployment tests
+pytest tests/test_installation.py tests/test_setup.py tests/test_package_deployment.py tests/test_installed_package.py tests/test_dist_files.py
+
+# File utilities and configuration tests
+pytest tests/test_file_utils.py tests/test_config.py
+
+# Strategy processing and loading tests
+pytest tests/test_strategy_processor.py tests/test_strategy_loader.py
 ```
 
 ## Detailed Test Structure

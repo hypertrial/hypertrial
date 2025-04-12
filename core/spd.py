@@ -277,7 +277,12 @@ def compute_spd_metrics(df, weights, strategy_name="custom_strategy"):
         'median_pct': np.median(dynamic_pct_array),
         'cycles': cycles,
         'excess_pct_by_cycle': dict(zip(cycles, excess_pct_list)),
-        'mean_excess_pct': np.mean(excess_pct_list)
+        'mean_excess_pct': np.mean(excess_pct_list),
+        'uniform_spd': uniform_spd_list,
+        'dynamic_spd': dynamic_spd_list,
+        'uniform_pct': uniform_pct_array.tolist(),
+        'dynamic_pct': dynamic_pct_array.tolist(),
+        'excess_pct': excess_pct_list
     }
     
     return metrics
@@ -412,7 +417,8 @@ def standalone_plot_comparison(df, weights, strategy_name="custom_strategy", sav
         plot_file = os.path.join(output_dir, f"{strategy_name}_vs_uniform_dca.png")
         plt.savefig(plot_file, dpi=100)
         print(f"\nPlot saved to: {plot_file}")
-    
-    plt.show()
+    else:
+        # Only show the plot if not saving to file
+        plt.show()
     
     return plot_data

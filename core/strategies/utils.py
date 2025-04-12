@@ -24,10 +24,10 @@ def load_strategy(strategy_name: str) -> Callable:
         ValueError: If strategy not found
     """
     # First, check if it's in the registry
-    from core.strategies import STRATEGY_REGISTRY
+    from core.strategies import _strategies
     
-    if strategy_name in STRATEGY_REGISTRY:
-        return STRATEGY_REGISTRY[strategy_name]
+    if strategy_name in _strategies:
+        return _strategies[strategy_name]
     
     # Try to load from the submit_strategies directory
     try:
