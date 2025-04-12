@@ -98,6 +98,9 @@ def extract_btc_data(save_to_csv=True, timeout=30, csv_path=None):
         except json.JSONDecodeError as e:
             logging.error(f"JSON decode error while fetching data from CoinMetrics API: {str(e)}")
             raise json.JSONDecodeError(f"Invalid JSON response from CoinMetrics API", e.doc, e.pos)
+        except ValueError as e:
+            logging.error(f"Error while fetching data from CoinMetrics API: {str(e)}")
+            raise  # Re-raise the ValueError directly
         except Exception as e:
             logging.error(f"Error while fetching data from CoinMetrics API: {str(e)}")
             raise Exception(f"Failed to retrieve data from CoinMetrics API: {str(e)}")
@@ -153,6 +156,9 @@ def extract_btc_data(save_to_csv=True, timeout=30, csv_path=None):
     except json.JSONDecodeError as e:
         logging.error(f"JSON decode error in extract_btc_data: {str(e)}")
         raise
+    except ValueError as e:
+        logging.error(f"Error in extract_btc_data: {str(e)}")
+        raise  # Re-raise ValueError directly
     except Exception as e:
         logging.error(f"Error in extract_btc_data: {str(e)}")
         raise

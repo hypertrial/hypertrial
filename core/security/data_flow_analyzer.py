@@ -128,9 +128,32 @@ class DataFlowAnalyzer:
         if info.get('source') == 'external':
             return "direct external input"
         elif info.get('source') == 'derived':
-            parent_chains = [self._get_source_chain(parent) for parent in info.get('parent_vars', [])]
+            parent_vars = info.get('parent_vars', [])
+            # Handle empty parent_vars array
+            if not parent_vars:
+                return "derived from unknown sources"
+            
+            # Filter out None values and ensure there are valid parents
+            valid_parents = [parent for parent in parent_vars if parent is not None]
+            if not valid_parents:
+                return "derived from unknown sources"
+            
+            # Process each parent and handle potential None values
+            parent_chains = []
+            for parent in valid_parents:
+                chain = self._get_source_chain(parent)
+                if chain is not None:
+                    parent_chains.append(chain)
+                else:
+                    parent_chains.append("unknown")
+                
+            # Make sure we have at least one item
+            if not parent_chains:
+                return "derived from unknown sources"
+            
             return f"derived from {', '.join(parent_chains)}"
-        return "unknown"
+        
+        return "unknown source"
     
     def check_indirect_data_flow(self):
         """Check for indirect flow of external data to sensitive operations"""
