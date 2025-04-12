@@ -30,6 +30,11 @@ The test suite includes the following test files:
 - `test_strategy_file.py`: Tests loading and executing standalone strategy files
 - `test_strategy_files.py`: Tests batch loading of multiple strategy files
 
+### Tutorial and Example Strategy Tests
+
+- `test_tutorial_commands.py`: Tests all CLI commands against files in the tutorials directory
+- `test_example_strategy.py`: Tests the functionality of the example strategy in the tutorials directory
+
 ### Security Tests
 
 - `test_security.py`: Main security tests for strategy validation and sandboxing
@@ -96,6 +101,35 @@ The standalone mode provides several advantages during development:
 2. **No Installation Required**: You don't need to add the strategy to the project structure.
 3. **Rapid Testing**: Quickly iterate on your strategy without modifying the project.
 4. **Direct Feedback**: Performance metrics are displayed immediately for your strategy only.
+
+#### Testing Tutorial Example Strategy
+
+The framework includes specific tests for validating the example strategy found in the tutorials directory:
+
+```bash
+# Test the example strategy functionality
+pytest tests/test_example_strategy.py -v
+
+# Test CLI commands with the tutorials directory
+pytest tests/test_tutorial_commands.py -v
+```
+
+The `test_example_strategy.py` file tests:
+
+1. The core functionality of the example strategy class
+2. Feature construction and weight calculations
+3. Registration and module imports
+4. Output validation against cycle-based normalization requirements
+
+The `test_tutorial_commands.py` file tests:
+
+1. All commands from `commands.py` and `main.py` with the example strategy
+2. Different CLI flags like `--standalone`, `--save-plots`, `--no-validate`
+3. Batch processing and parallelization options
+4. Directory filtering with `--include-patterns` and `--exclude-patterns`
+5. Multiple strategy loading methods like `--strategy-dir` and `--glob-pattern`
+
+These tests ensure that all command-line functionality works correctly with tutorial files. They use a non-interactive Matplotlib backend to prevent plots from being displayed during testing.
 
 ### Data Sources in Standalone Mode
 
@@ -436,6 +470,9 @@ pytest tests/test_security.py tests/test_bandit_security.py
 
 # Requirements and version compatibility tests
 pytest tests/test_requirements_compatibility.py tests/test_version_constraints.py
+
+# Tutorial and example strategy tests
+pytest tests/test_example_strategy.py tests/test_tutorial_commands.py
 ```
 
 ## Detailed Test Structure
@@ -453,6 +490,21 @@ The `test_submit_strategies.py` file contains two main test classes:
 2. **`TestDynamicSubmitStrategies`**: Tests creating and running strategies dynamically
    - Creates a temporary strategy file
    - Tests loading, execution, and backtesting
+
+The `test_tutorial_commands.py` file contains the `TestTutorialCommandsExecution` class with tests for:
+
+1. Set up with non-interactive matplotlib configuration
+2. Command execution utilities with environment control
+3. Tests for each major command-line flag and option
+4. Tests for processing directories, glob patterns, and file lists
+5. Handling of plot outputs with special environment variables
+
+The `test_example_strategy.py` file contains the `TestExampleStrategy` class with tests for:
+
+1. Core functionality of the example DynamicDCA10MAStrategy class
+2. Feature construction with moving averages
+3. Weight computation and cycle-based normalization
+4. Strategy registration and proper function return values
 
 ## Generating Test Reports
 
