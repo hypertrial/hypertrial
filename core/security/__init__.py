@@ -34,4 +34,6 @@ from core.security.utils import is_test_mode, validate_strategy_file
 
 # Export the decorator for easy access
 from core.security.strategy_security import StrategySecurity
-secure_strategy = StrategySecurity.secure_strategy 
+secure_strategy = StrategySecurity.secure_strategy
+
+__version__ = "0.1.6"

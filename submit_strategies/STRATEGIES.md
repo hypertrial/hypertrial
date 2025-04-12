@@ -107,26 +107,11 @@ def your_name_strategy(df):
 
 ## External Data Access
 
-Strategies are allowed to access external data only through `pandas_datareader`. Direct network requests using libraries like `requests` or `urllib` are strictly prohibited for security reasons.
+**IMPORTANT:** External data sources are NOT allowed for tournament submissions. Strategies must only use the provided Bitcoin price data that is passed to the strategy function. Any attempts to access external APIs or data sources will result in immediate rejection of your strategy.
 
-### Permitted External Data Access
+The following information about external data access is retained for educational purposes only and does not apply to tournament submissions:
 
-1. **Use pandas_datareader (preferred method)**
-
-   ```python
-   import pandas_datareader as web
-
-   # Example: Getting gold price data from Yahoo Finance
-   gold_data = web.DataReader('GC=F', 'yahoo', start='2020-01-01', end='2021-01-01')
-   ```
-
-2. **Access is domain-restricted**
-   Only the following domains are allowed:
-   - api.coinmetrics.io (CoinMetrics API)
-   - query1.finance.yahoo.com (Yahoo Finance)
-   - api.coingecko.com (CoinGecko)
-   - finance.yahoo.com (Yahoo Finance)
-   - data.nasdaq.com (Nasdaq Data Link)
+~~Strategies are allowed to access external data only through `pandas_datareader`. Direct network requests using libraries like `requests` or `urllib` are strictly prohibited for security reasons.~~
 
 ### Prohibited Network Access Methods
 
@@ -140,34 +125,31 @@ The following methods of network access are strictly forbidden:
    - socket module (`import socket`)
 
 2. **Custom network implementations**
+
    - Creating custom socket connections
    - Using any third-party HTTP clients not listed in allowed modules
+
+3. **Data access libraries**
+   - pandas_datareader
+   - Any other libraries that access external data
 
 Attempts to use these libraries will result in immediate rejection of your strategy.
 
 ## External Data Sources
 
-You may use external data sources in your strategy, but:
+~~You may use external data sources in your strategy, but:~~
 
-1. Your submission must include all code needed to retrieve and process the external data
-2. Any required API keys must be included in your submission file
-3. Your strategy must handle cases where the external data is unavailable
-4. The final output must still follow the `strategy_template.py` structure
-5. Your strategy must pass all tests in the test suite
-6. Clearly document any external data sources in your strategy's docstring
+**IMPORTANT:** External data sources are NOT allowed for tournament submissions. Your strategy must only use the Bitcoin price data provided in the input dataframe parameter. The security system will immediately reject any strategy that attempts to access external data.
 
-Example of documenting external data usage:
+For educational purposes only, here is an example of how a strategy might be structured if external data were allowed (which it is not for this tournament):
 
 ```python
-class ExternalDataStrategy(StrategyTemplate):
+class ExampleStrategy(StrategyTemplate):
     """
-    Tournament strategy that uses external gold price data alongside BTC price.
+    Example strategy that only uses the provided BTC price data.
 
-    External data sources:
-    - Yahoo Finance API: Gold price data (GLD)
-
-    The strategy compares the BTC/Gold ratio to identify periods of BTC
-    undervaluation relative to gold, allocating more weight during these periods.
+    The strategy calculates a simple moving average and allocates more
+    weight when the price is below this average.
     """
 ```
 
@@ -272,7 +254,7 @@ Consider these approaches for your tournament strategy:
 
 1. Your strategy must be self-contained in a single Python file
 2. Your strategy must follow the structure defined in `strategy_template.py`
-3. External data sources are not allowed (strategies can only use the provided BTC price data)
+3. **External data sources are not allowed** (strategies can only use the provided BTC price data)
 4. Your strategy must complete execution in a reasonable time
 5. You must not modify or depend on changes to the core framework
 6. All entries must pass the test suite to qualify
@@ -305,9 +287,10 @@ The system detects when it's running in test mode vs. production mode:
 
 ### Network Restrictions
 
-- **No external data access** - No external APIs or data sources are allowed
+- **No external data access** - No external APIs or data sources are allowed. Strategies can only use the provided Bitcoin price data
 - **No direct HTTP requests** - The `requests` library is blocked
 - **No socket operations** - The `socket` module is blocked
+- **No pandas_datareader** - The pandas_datareader package is blocked as it provides external data access
 
 ### Pandas Operations
 
@@ -415,8 +398,12 @@ Strategies will be evaluated based on:
 If you have questions about the tournament or need help troubleshooting your strategy, please:
 
 1. Check the documentation in this repository
-2. Review the example strategies
-3. Contact the tournament organizers at [contact information]
+   - `README.md`: For general tournament information
+   - `core/SECURITY.md`: For detailed security requirements
+   - `tests/TESTS.md`: For testing procedures and requirements
+2. Review the example strategies in the `tutorials` directory
+3. **External Data Restriction**: For questions about the external data prohibition, refer to the prominent warnings in all documentation files
+4. Submit issues on GitHub: https://github.com/mattfaltyn/hypertrial/issues
 
 ### Common Security Issues
 

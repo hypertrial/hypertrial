@@ -14,7 +14,7 @@ class TestSetup(unittest.TestCase):
         """Set up a temporary directory for testing package builds."""
         self.temp_dir = tempfile.mkdtemp()
         self.old_dir = os.getcwd()
-        self.project_root = Path(__file__).parent.parent.absolute()
+        self.project_root = Path(__file__).parent.parent.parent.absolute()
         
     def tearDown(self):
         """Clean up temporary directory after tests."""

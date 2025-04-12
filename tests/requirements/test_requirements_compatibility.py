@@ -28,6 +28,8 @@ def parse_requirements() -> List[Tuple[str, str]]:
     Returns:
         List of tuples (package_name, version_constraint)
     """
+    # Update the path to point to the main project directory
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     requirements_path = os.path.join(project_root, 'requirements.txt')
     requirements = []
     

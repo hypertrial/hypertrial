@@ -50,4 +50,6 @@ __all__ = [
     'plot_final_weights',
     'plot_weight_sums_by_cycle',
     'security'
-] 
+]
+
+__version__ = "0.1.6"

@@ -54,6 +54,8 @@ def get_requirements() -> List[Tuple[str, str, str]]:
     Returns:
         List of tuples (package_name, version_constraint, import_name)
     """
+    # Update the path to point to the main project directory
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     requirements_path = os.path.join(project_root, 'requirements.txt')
     requirements = []
     

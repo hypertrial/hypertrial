@@ -12,6 +12,8 @@ Hypertrial's Stacking Sats challenge hosts a Bitcoin DCA strategy tournament whe
 
 As a tournament participant, your task is to develop and submit a custom DCA strategy that outperforms traditional approaches by strategically adjusting purchase weights based on market conditions.
 
+**IMPORTANT:** External data sources are strictly prohibited in the tournament. Strategies must only use the provided Bitcoin price data. Any attempts to access external APIs or data sources will result in immediate rejection of your strategy.
+
 ## How to Participate
 
 1. **Start with Tutorial 1**: Review [`tutorials/1. Intro.ipynb`](tutorials/1.%20Intro.ipynb) to understand the basics
@@ -38,9 +40,9 @@ All submitted strategies undergo comprehensive security checks:
 2. **Resource Monitoring**: Memory and CPU usage are restricted and monitored
 3. **Dangerous Pattern Detection**: Prohibited functions and code patterns are blocked
 4. **Module Restrictions**: Only approved modules can be imported
-5. **External Data Validation**: Data sources are verified and sandboxed
+5. **External Data Validation**: All forms of external data access are blocked
 
-Strategies with high or medium severity security issues will be automatically blocked from execution. For detailed security requirements, see `tests/TESTS.md`.
+Strategies with high or medium severity security issues will be automatically blocked from execution. For detailed security requirements, see `tests/TESTS.md` and `core/SECURITY.md`.
 
 ### Test Mode Security Behavior
 
@@ -256,6 +258,8 @@ The Bitcoin price data is loaded from:
 1. The default local CSV file (`core/data/btc_price_data.csv`)
 2. If the file doesn't exist, data is automatically downloaded from the CoinMetrics API
 
+**Note:** While the framework downloads data from CoinMetrics during initialization, your strategy is not allowed to access external data sources directly.
+
 You can specify a custom data file with:
 
 ```bash
@@ -330,7 +334,7 @@ python -m core.main --backtest-all --output-dir results
 2. You may not modify any code in the `core/` directory.
 3. Your final submitted strategy file must pass all tests in `tests/test_submit_strategies.py`.
 4. Your strategy should be appropriately documented within the notebook and the extracted file.
-5. External data sources are not allowed. Strategies can only use the provided Bitcoin price data.
+5. **External data sources are not allowed.** Strategies can only use the provided Bitcoin price data that is passed to the strategy function. Any attempts to access external APIs or data sources will result in immediate rejection.
 6. Strategies will be ranked by their mean excess SPD percentile compared to uniform DCA
 
 ## Configuration
@@ -361,6 +365,7 @@ Security configuration is defined in `core/security/config.py` and is not custom
 - **PyPI Package**: https://pypi.org/project/hypertrial/
 - **Documentation**: Available in the repository's tutorials directory
 - **Issue Tracker**: Submit issues on GitHub
+- **Contact**: For questions about external data restrictions or other tournament rules, see the documentation or submit an issue on GitHub.
 
 ## License
 

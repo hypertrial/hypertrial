@@ -26,72 +26,77 @@ The test suite includes the following test files:
 
 ### Tournament Submission Tests
 
-- `test_submit_strategies.py`: Tests strategies submitted to the `submit_strategies` directory
-- `test_strategy_file.py`: Tests loading and executing standalone strategy files
-- `test_strategy_files.py`: Tests batch loading of multiple strategy files
-- `test_strategies_utils.py`: Tests utility functions for strategy handling and manipulation
+- `strategies/test_submit_strategies.py`: Tests strategies submitted to the `submit_strategies` directory
+- `strategies/test_strategy_file.py`: Tests loading and executing standalone strategy files
+- `strategies/test_strategy_files.py`: Tests batch loading of multiple strategy files
+- `strategies/test_strategies_utils.py`: Tests utility functions for strategy handling and manipulation
+- `strategies/test_strategy_loader.py`: Tests dynamic loading of strategy files with timeout handling
+- `strategies/test_strategy_processor.py`: Tests strategy processing with validation and backtest integration
 
 ### Tutorial and Example Strategy Tests
 
-- `test_tutorial_commands.py`: Tests all CLI commands against files in the tutorials directory
-- `test_example_strategy.py`: Tests the functionality of the example strategy in the tutorials directory
+- `cli/test_tutorial_commands.py`: Tests all CLI commands against files in the tutorials directory
+- `strategies/test_example_strategy.py`: Tests the functionality of the example strategy in the tutorials directory
 
 ### Security Tests
 
-- `test_security.py`: Main security tests for strategy validation and sandboxing
-- `test_bandit_security.py`: Tests for Bandit security analysis on submitted strategies
-- `test_security_module.py`: Tests for the security module components and functionality
+- `security/test_security.py`: Main security tests for strategy validation and sandboxing
+- `security/test_bandit_security.py`: Tests for Bandit security analysis on submitted strategies
+- `security/test_security_module.py`: Tests for the security module components and functionality
 
 ### Data Tests
 
-- `test_data_basic.py`: Tests for basic data loading and validation
-- `test_data_download.py`: Tests for data downloading functionality
-- `test_data_download_integration.py`: Tests data integration with real-world sources
-- `core/test_data_formats.py`: Tests data format validation and conversion
-- `core/test_data_validation.py`: Tests data validation rules and constraints
+- `data/test_data_basic.py`: Tests for basic data loading and validation
+- `data/test_data_download.py`: Tests for data downloading functionality
+- `data/test_data_download_integration.py`: Tests data integration with real-world sources
+- `core_modules/data/test_data_formats.py`: Tests data format validation and conversion
+- `core_modules/data/test_data_validation.py`: Tests data validation rules and constraints
 
 ### Package Tests
 
-- `test_installation.py`: Tests for proper package installation
-- `test_setup.py`: Tests for proper package setup
-- `test_package_deployment.py`: Tests for package deployment
-- `test_installed_package.py`: Tests for installed package functionality
-- `test_dist_files.py`: Tests for distribution files
+- `package/test_installation.py`: Tests for proper package installation
+- `package/test_setup.py`: Tests for proper package setup
+- `package/test_package_deployment.py`: Tests for package deployment
+- `package/test_installed_package.py`: Tests for installed package functionality
+- `package/test_dist_files.py`: Tests for distribution files
 
 ### Core Module Coverage Tests
 
 The following tests ensure comprehensive coverage of core functionality:
 
-- `test_file_utils.py`: Tests file utility functions for strategy discovery and path management
-- `test_plots.py`: Tests visualization functions with a non-interactive Matplotlib backend
-- `test_config.py`: Tests configuration constants and their constraints
-- `test_batch.py`: Tests batch processing of strategies and parallel execution
-- `test_batch_advanced.py`: Tests advanced batch processing capabilities and edge cases
-- `test_strategy_processor.py`: Tests strategy processing with validation and backtest integration
-- `test_strategy_loader.py`: Tests dynamic loading of strategy files with timeout handling
-- `core/test_error_handling.py`: Tests error handling and graceful failure modes
+- `core_modules/test_file_utils.py`: Tests file utility functions for strategy discovery and path management
+- `core_modules/test_plots.py`: Tests visualization functions with a non-interactive Matplotlib backend
+- `core_modules/test_config.py`: Tests configuration constants and their constraints
+- `batch/test_batch.py`: Tests batch processing of strategies and parallel execution
+- `batch/test_batch_advanced.py`: Tests advanced batch processing capabilities and edge cases
+- `core_modules/error/test_error_handling.py`: Tests error handling and graceful failure modes
 
 ### Strategy Tests
 
-- `core/strategies/test_strategy_registration.py`: Tests strategy registration system
-- `core/strategies/test_dynamic_strategy.py`: Tests dynamic strategy generation
-- `core/strategies/test_uniform_strategy.py`: Tests uniform strategy allocation
-- `core/test_strategy_performance.py`: Tests strategy performance metrics and calculations
+- `strategies/core/test_strategy_registration.py`: Tests strategy registration system
+- `strategies/core/test_dynamic_strategy.py`: Tests dynamic strategy generation
+- `strategies/core/test_uniform_strategy.py`: Tests uniform strategy allocation
+- `performance/test_strategy_performance.py`: Tests strategy performance metrics and calculations
 
 ### Requirements and Version Tests
 
-- `test_requirements_compatibility.py`: Tests compatibility between packages in requirements.txt
-- `test_version_constraints.py`: Tests version constraints in requirements.txt
-- `test_validation_default.py`: Tests default validation configurations
-- `test_spd_checks.py`: Tests software package data integrity checks
-- `core/test_spd_calculation.py`: Tests SPD calculation algorithms
-- `core/test_spd_integration.py`: Tests SPD integration with other system components
-- `core/test_spd_advanced.py`: Tests advanced SPD features and edge cases
-- `core/test_performance_benchmarks.py`: Tests strategy performance benchmarks
+- `requirements/test_requirements_compatibility.py`: Tests compatibility between packages in requirements.txt
+- `requirements/test_version_constraints.py`: Tests version constraints in requirements.txt
+- `requirements/test_validation_default.py`: Tests default validation configurations
+- `spd/test_spd_checks.py`: Tests software package data integrity checks
+- `spd/core/test_spd_calculation.py`: Tests SPD calculation algorithms
+- `spd/core/test_spd_integration.py`: Tests SPD integration with other system components
+- `spd/core/test_spd_advanced.py`: Tests advanced SPD features and edge cases
+- `performance/test_performance_benchmarks.py`: Tests strategy performance benchmarks
 
 ### CLI Tests
 
-- `test_cli.py`: Tests command-line interface functionality
+- `cli/test_cli.py`: Tests command-line interface functionality
+- `cli/test_tutorial_commands.py`: Tests tutorial command execution
+
+### Integration Tests
+
+The `integration/` directory is prepared for integration tests that verify different components working together. Currently, this directory is empty and reserved for future end-to-end tests.
 
 ## Tournament Test Focus
 
@@ -106,7 +111,7 @@ Your submitted strategy must pass all tests in `test_submit_strategies.py` to be
 To verify your tournament submission:
 
 ```bash
-pytest tests/test_submit_strategies.py -v
+pytest tests/strategies/test_submit_strategies.py -v
 ```
 
 The `-v` flag provides verbose output so you can see exactly which tests pass or fail.
@@ -136,10 +141,10 @@ The framework includes specific tests for validating the example strategy found 
 
 ```bash
 # Test the example strategy functionality
-pytest tests/test_example_strategy.py -v
+pytest tests/strategies/test_example_strategy.py -v
 
 # Test CLI commands with the tutorials directory
-pytest tests/test_tutorial_commands.py -v
+pytest tests/cli/test_tutorial_commands.py -v
 ```
 
 The `test_example_strategy.py` file tests:
@@ -230,7 +235,7 @@ The `test_requirements_compatibility.py` file contains tests that:
 To run the requirements compatibility tests:
 
 ```bash
-pytest tests/test_requirements_compatibility.py -v
+pytest tests/requirements/test_requirements_compatibility.py -v
 ```
 
 ### Version Constraints Tests
@@ -246,7 +251,7 @@ The `test_version_constraints.py` file contains tests that:
 To run the version constraints tests:
 
 ```bash
-pytest tests/test_version_constraints.py -v
+pytest tests/requirements/test_version_constraints.py -v
 ```
 
 These tests are especially important when upgrading dependencies to ensure that newer versions continue to work correctly with the codebase.
@@ -330,41 +335,29 @@ All other DataFrame write operations remain blocked even in test mode.
 
 ### External Data Security
 
-When using external data, your strategy must:
-
-1. Use only approved data sources (see below)
-2. Validate URL parameters and inputs
-3. Handle external data failures gracefully
-4. Avoid using external data in dangerous operations (e.g., eval())
-
-#### Approved External Data Sources
-
-- CoinMetrics API: `api.coinmetrics.io`
-- Yahoo Finance: `query1.finance.yahoo.com`, `finance.yahoo.com`
-- CoinGecko: `api.coingecko.com`
-- Nasdaq Data: `data.nasdaq.com`
+**IMPORTANT:** External data sources are strictly prohibited in the tournament. The information below about external data validation is retained for educational purposes only and does not apply to tournament submissions.
 
 For more detailed information on security requirements, see `core/SECURITY.md`.
 
 ### Testing Strategies with External Data Sources
 
-If your strategy uses external data sources, the tests will verify:
+~~If your strategy uses external data sources, the tests will verify:~~
 
-1. That your strategy can retrieve the external data successfully
-2. That it handles API failures or connection issues gracefully
-3. That the final output conforms to the required format
-4. That the strategy completes within a reasonable time frame
-5. That external data is accessed in a secure manner
+~~1. That your strategy can retrieve the external data successfully~~
+~~2. That it handles API failures or connection issues gracefully~~
+~~3. That the final output conforms to the required format~~
+~~4. That the strategy completes within a reasonable time frame~~
+~~5. That external data is accessed in a secure manner~~
 
-To ensure your strategy with external data passes the tests:
+~~To ensure your strategy with external data passes the tests:~~
 
-1. Include all necessary API code and keys in your strategy file
-2. Add error handling for API calls and provide fallback behavior
-3. Consider adding a caching mechanism to avoid repeated API calls during testing
-4. Make sure your API usage respects rate limits to avoid test failures
-5. Only use approved data sources and validate URLs before use
+~~1. Include all necessary API code and keys in your strategy file~~
+~~2. Add error handling for API calls and provide fallback behavior~~
+~~3. Consider adding a caching mechanism to avoid repeated API calls during testing~~
+~~4. Make sure your API usage respects rate limits to avoid test failures~~
+~~5. Only use approved data sources and validate URLs before use~~
 
-Example of a robust external data retrieval function:
+~~Example of a robust external data retrieval function:~~
 
 ```python
 def get_external_data(start_date, end_date):
@@ -410,7 +403,14 @@ def get_external_data(start_date, end_date):
 
 ### External Data Restriction
 
-External data sources are not allowed in strategies. Strategies can only use the provided Bitcoin price data. Any attempts to access external APIs or data sources will result in immediate rejection of your strategy.
+**IMPORTANT:** External data sources are not allowed in strategies. Strategies can only use the provided Bitcoin price data. Any attempts to access external APIs or data sources will result in immediate rejection of your strategy.
+
+The security system enforces this restriction by:
+
+1. Blocking imports of data access libraries (pandas_datareader, requests, urllib, etc.)
+2. Preventing network connections
+3. Monitoring for attempts to access external resources
+4. Analyzing data flow for patterns that might indicate external data usage
 
 ### Passing Tournament Requirements
 
@@ -421,7 +421,6 @@ For your strategy to qualify for the tournament, it must:
 - Have non-negative weights
 - Handle the backtest date range properly
 - Not modify the input data in harmful ways
-- Handle external data retrieval properly, if applicable
 - Execute efficiently (complete within reasonable time)
 - Pass all security validation checks
 
@@ -443,7 +442,6 @@ If your strategy fails during execution:
 - Ensure all features are calculated before being used
 - Verify your date ranges match those in `core/config.py`
 - Make sure you're not modifying the input DataFrame (use `.copy()`)
-- For external data, add robust error handling for API calls
 
 ### Security Violations
 
@@ -451,14 +449,16 @@ If your strategy fails during execution:
 
 ### API and External Data Issues
 
-If your strategy fails due to external data problems:
+~~If your strategy fails due to external data problems:~~
 
-- Include fallback behavior when external data can't be retrieved
-- Implement caching to avoid network failures during testing
-- Add timeouts for API calls to prevent tests from hanging
-- Consider mocking the API responses for more reliable testing
-- Only use approved data sources (see the Security Checks section)
-- Add URL validation to prevent security issues
+~~- Include fallback behavior when external data can't be retrieved~~
+~~- Implement caching to avoid network failures during testing~~
+~~- Add timeouts for API calls to prevent tests from hanging~~
+~~- Consider mocking the API responses for more reliable testing~~
+~~- Only use approved data sources (see the Security Checks section)~~
+~~- Add URL validation to prevent security issues~~
+
+**IMPORTANT:** Remember that external data sources are not allowed in tournament submissions. This section is retained for educational purposes only.
 
 ### Weight Generation Issues
 
@@ -491,40 +491,43 @@ To run specific categories of tests:
 
 ```bash
 # Tournament submission tests
-pytest tests/test_submit_strategies.py tests/test_strategy_file.py tests/test_strategy_files.py tests/test_strategies_utils.py
+pytest tests/strategies/test_submit_strategies.py tests/strategies/test_strategy_file.py tests/strategies/test_strategy_files.py tests/strategies/test_strategies_utils.py
 
 # Security tests
-pytest tests/test_security.py tests/test_bandit_security.py tests/test_security_module.py
+pytest tests/security/
 
 # Requirements and version compatibility tests
-pytest tests/test_requirements_compatibility.py tests/test_version_constraints.py
+pytest tests/requirements/
 
 # Tutorial and example strategy tests
-pytest tests/test_example_strategy.py tests/test_tutorial_commands.py
+pytest tests/strategies/test_example_strategy.py tests/cli/test_tutorial_commands.py
 
 # Core module tests
-pytest tests/core/
+pytest tests/core_modules/
 
 # Strategy module tests
-pytest tests/core/strategies/
+pytest tests/strategies/core/
 
 # Data validation and format tests
-pytest tests/test_data_*.py tests/core/test_data_*.py
+pytest tests/data/ tests/core_modules/data/
 
 # SPD (Software Package Data) tests
-pytest tests/test_spd_*.py tests/core/test_spd_*.py
+pytest tests/spd/
 
 # Batch processing tests
-pytest tests/test_batch.py tests/test_batch_advanced.py
+pytest tests/batch/
 
 # Package installation and deployment tests
-pytest tests/test_installation.py tests/test_setup.py tests/test_package_deployment.py tests/test_installed_package.py tests/test_dist_files.py
+pytest tests/package/
 
 # File utilities and configuration tests
-pytest tests/test_file_utils.py tests/test_config.py
+pytest tests/core_modules/test_file_utils.py tests/core_modules/test_config.py
 
 # Strategy processing and loading tests
-pytest tests/test_strategy_processor.py tests/test_strategy_loader.py
+pytest tests/strategies/test_strategy_processor.py tests/strategies/test_strategy_loader.py
+
+# Performance tests
+pytest tests/performance/
 ```
 
 ## Detailed Test Structure
@@ -563,7 +566,7 @@ The `test_example_strategy.py` file contains the `TestExampleStrategy` class wit
 If you want to generate a detailed report of your test results:
 
 ```bash
-pytest tests/test_submit_strategies.py -v --html=report.html
+pytest tests/strategies/test_submit_strategies.py -v --html=report.html
 ```
 
 This requires the pytest-html plugin:
@@ -649,17 +652,82 @@ This will show which lines in the core modules are covered by tests and identify
 
 The test suite is organized into the following directory structure:
 
-- `tests/`: Root directory containing main test files
-  - `core/`: Core module-specific tests
-    - `strategies/`: Strategy-specific tests for core functionality
-  - `.pytest_cache/`: Pytest cache directory (automatically generated)
-  - `__pycache__/`: Python cache directory (automatically generated)
+- `tests/`: Root directory containing main configuration and common fixtures
+  - `security/`: Security-related tests
+    - `test_security.py`: Main security tests for strategy validation and sandboxing
+    - `test_bandit_security.py`: Bandit security analysis tests
+    - `test_security_module.py`: Security module component tests
+  - `strategies/`: Strategy-related tests
+    - `test_strategy_file.py`: Standalone strategy file tests
+    - `test_strategy_files.py`: Multiple strategy files loading tests
+    - `test_strategies_utils.py`: Strategy utility function tests
+    - `test_strategy_loader.py`: Dynamic strategy loading tests
+    - `test_strategy_processor.py`: Strategy processing tests
+    - `test_submit_strategies.py`: Submission tests
+    - `test_example_strategy.py`: Example strategy tests
+    - `core/`: Core strategy implementation tests
+      - `test_strategy_registration.py`: Strategy registration tests
+      - `test_dynamic_strategy.py`: Dynamic strategy tests
+      - `test_uniform_strategy.py`: Uniform strategy tests
+  - `batch/`: Batch processing tests
+    - `test_batch.py`: Basic batch processing tests
+    - `test_batch_advanced.py`: Advanced batch processing tests
+  - `data/`: Data handling tests
+    - `test_data_basic.py`: Basic data loading tests
+    - `test_data_download.py`: Data downloading tests
+    - `test_data_download_integration.py`: Data integration tests
+  - `package/`: Package management tests
+    - `test_installation.py`: Installation tests
+    - `test_setup.py`: Setup tests
+    - `test_package_deployment.py`: Deployment tests
+    - `test_installed_package.py`: Installed package tests
+    - `test_dist_files.py`: Distribution files tests
+  - `cli/`: Command-line interface tests
+    - `test_cli.py`: CLI functionality tests
+    - `test_tutorial_commands.py`: Tutorial command tests
+  - `spd/`: Software Package Data tests
+    - `test_spd_checks.py`: SPD integrity checks
+    - `core/`: Core SPD implementation tests
+      - `test_spd_advanced.py`: Advanced SPD features tests
+      - `test_spd_integration.py`: SPD integration tests
+      - `test_spd_calculation.py`: SPD calculation tests
+  - `requirements/`: Requirements and version tests
+    - `test_requirements_compatibility.py`: Package compatibility tests
+    - `test_version_constraints.py`: Version constraint tests
+    - `test_validation_default.py`: Default validation tests
+  - `core_modules/`: Core module tests
+    - `test_config.py`: Configuration tests
+    - `test_file_utils.py`: File utility tests
+    - `test_plots.py`: Visualization tests
+    - `data/`: Core data module tests
+      - `test_data_formats.py`: Data format tests
+      - `test_data_validation.py`: Data validation tests
+    - `error/`: Error handling tests
+      - `test_error_handling.py`: Error handling tests
+  - `performance/`: Performance tests
+    - `test_strategy_performance.py`: Strategy performance tests
+    - `test_performance_benchmarks.py`: Performance benchmark tests
+  - `integration/`: Integration and end-to-end tests
+    - Currently empty, reserved for future end-to-end tests
 
 This organization allows for:
 
 1. **Modular Testing**: Each component has dedicated test files focused on its functionality
 2. **Hierarchical Structure**: Tests are grouped by module and submodule
-3. **Isolation**: Core tests can be run separately from submission and integration tests
+3. **Isolation**: Tests can be run separately by category for focused debugging
 4. **Maintainability**: New tests can be added to the appropriate directory as the system evolves
 
-When adding your own strategies for testing, you should focus on the main `tests/` directory and specifically the `test_submit_strategies.py` file which verifies tournament submissions.
+When running tests, you can target specific categories by using the directory path:
+
+```bash
+# Run all security tests
+pytest tests/security/
+
+# Run only strategy performance tests
+pytest tests/performance/
+
+# Run all core module tests
+pytest tests/core_modules/
+```
+
+For development, you can focus on a specific test category when working on a related component of the system.

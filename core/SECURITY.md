@@ -22,6 +22,10 @@ Hypertrial implements a comprehensive security model that includes:
 5. **AST-based Validation**: Analyzes code structure to detect dangerous patterns
 6. **URL and External Data Validation**: Ensures data comes from trusted sources only
 
+## Tournament Data Restriction
+
+**IMPORTANT**: For the Stacking Sats Challenge tournament, external data sources are strictly prohibited. Strategies must only use the Bitcoin price data provided in the input dataframe parameter. Any attempts to access external APIs or data sources (including pandas_datareader, requests, urllib, etc.) will result in immediate rejection of your strategy.
+
 ## Security Components
 
 ### Resource Limits
@@ -92,12 +96,13 @@ The `StrategySecurity` class provides the main security interface:
 
 Hypertrial restricts imports to a specific set of modules:
 
-- Core data science: `pandas`, `numpy`, `scipy`
+- Core data science: `pandas`, `numpy`, `scipy`, `matplotlib`
 - Time and date: `datetime`, `time`
 - Type information: `typing`
 - Core framework: `core.config`, `core.strategies`, `core.strategies.base_strategy`
 - Strategy modules: `submit_strategies`
-- Data access: `pandas_datareader`
+
+**Note**: Network access and external data libraries (`pandas_datareader`, `requests`, `urllib`, etc.) are specifically prohibited for tournament submissions.
 
 ### Restricted OS Access
 
@@ -111,12 +116,37 @@ All other OS operations are blocked.
 
 ## External Data Sources
 
-Only the following data sources are allowed:
+**IMPORTANT**: For the tournament competition, external data sources are not allowed. Strategies can only use the provided Bitcoin price data that is passed to the strategy function. Any attempts to access external APIs or data sources will result in immediate rejection of your strategy.
 
-- CoinMetrics API: `api.coinmetrics.io`
-- Yahoo Finance: `query1.finance.yahoo.com`, `finance.yahoo.com`
-- CoinGecko: `api.coingecko.com`
-- Nasdaq Data: `data.nasdaq.com`
+The security system blocks access to all external data sources, including but not limited to:
+
+- CoinMetrics API
+- Yahoo Finance
+- CoinGecko
+- Nasdaq Data
+- Any other internet-based data source
+
+### Data Flow Restrictions
+
+The system applies strict rules to how data can be used:
+
+- External data cannot be used in dangerous operations like `eval()`, `exec()`, or `subprocess` calls
+- External data cannot influence control flow that leads to sensitive operations
+- Data transformation chains are tracked to prevent obscuring the source of external data
+- Data leakage through network connections, file operations, or other side channels is blocked
+
+### DataFrame Operations in Test Mode
+
+The following DataFrame operations are allowed specifically in test mode but blocked in production:
+
+- `to_csv` - Exporting to CSV files
+- `to_datetime` - Converting to datetime format
+- `to_numpy` - Converting to NumPy arrays
+- `to_dict` - Converting to dictionaries
+- `to_records` - Converting to records
+- `to_series` - Converting to Series objects
+
+All other DataFrame write operations remain blocked even in test mode.
 
 ## Dangerous Patterns
 
@@ -163,6 +193,22 @@ When writing strategies, follow these guidelines to avoid security violations:
 4. **Handle External Data Safely**: Never use external data in eval() or similar functions
 5. **Use Vectorized Operations**: Prefer pandas/numpy operations over explicit loops
 6. **Limit Memory Usage**: Release large objects when no longer needed
+
+## Security Testing
+
+The security model is thoroughly tested with dedicated test files:
+
+- `test_security.py`: Comprehensive tests for all security components
+- `test_bandit_security.py`: Tests for Bandit static analysis integration
+- `test_security_module.py`: Tests for the security module components
+
+These tests verify that the security system correctly:
+
+1. Identifies and blocks dangerous code patterns
+2. Enforces resource limits appropriately
+3. Restricts access to prohibited modules and functions
+4. Detects data flow vulnerabilities
+5. Distinguishes between test and production environments
 
 ## Security Warnings vs. Errors
 
