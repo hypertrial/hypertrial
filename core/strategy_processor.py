@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Strategy processing and execution functionality for the HyperTrial framework.
+Strategy processing and execution functionality for the Hypertrial framework.
 """
 import logging
 from core.config import BACKTEST_START
 from core.spd import backtest_dynamic_dca, compute_spd_metrics, standalone_plot_comparison
 from core.plots import plot_price_vs_lookback_avg, plot_final_weights, plot_weight_sums_by_cycle
+from core.spd_checks import check_strategy_submission_ready
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show_plots=True, save_plots=False, output_dir='results', standalone=False):
+def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show_plots=True, save_plots=False, output_dir='results', standalone=False, validate=True):
     """
     Process a single strategy - either from name or file.
     
@@ -22,6 +23,7 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         save_plots (bool): Whether to save plots to files
         output_dir (str): Directory to save results
         standalone (bool): Whether to run in standalone mode
+        validate (bool): Whether to validate strategy against submission criteria (True by default)
     """
     from core.strategy_loader import load_strategy_from_file, find_strategy_class
     from core.strategies import get_strategy, list_strategies
@@ -58,6 +60,15 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         
     # Compute weights using the strategy function with security checks
     weights = strategy_fn(btc_df)
+
+    # Run validation checks if requested
+    if validate:
+        logger.info(f"Validating strategy '{strategy_name}' against submission criteria...")
+        is_valid = check_strategy_submission_ready(btc_df, strategy_name)
+        if not is_valid:
+            logger.warning(f"Strategy '{strategy_name}' validation failed")
+        else:
+            logger.info(f"Strategy '{strategy_name}' passed all validation checks")
 
     # Plot results only if not disabled
     from core.plots import print_weight_sums_by_cycle  # Import here to be used in both cases

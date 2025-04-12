@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Command orchestration for the HyperTrial framework.
+Command orchestration for the Hypertrial framework.
 This module contains the main function that processes command-line arguments
 and coordinates the appropriate actions.
 """
@@ -17,13 +17,14 @@ from core.data import load_data
 from core.data.extract_data import extract_btc_data
 from core.security import SecurityError
 from core.spd import list_available_strategies
+from core.spd_checks import check_strategy_submission_ready
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 def main(args):
     """
-    Main function for the HyperTrial framework that processes command-line arguments
+    Main function for the Hypertrial framework that processes command-line arguments
     and dispatches to appropriate functions.
     
     Args:
@@ -133,14 +134,15 @@ def main(args):
                 show_plots=not args.no_plots,
                 processes=args.processes,
                 batch_size=args.batch_size,
-                file_timeout=args.file_timeout
+                file_timeout=args.file_timeout,
+                validate=args.validate
             )
             return
             
         # If backtest all flag is set, run all strategies and exit
         if args.backtest_all:
             # When running all backtests, disable plots by default (ignore no-plots flag)
-            backtest_all_strategies(btc_df, args.output_dir, show_plots=False)
+            backtest_all_strategies(btc_df, args.output_dir, show_plots=False, validate=args.validate)
             return
         
         # Process a single strategy (either from file or by name)
@@ -152,7 +154,8 @@ def main(args):
                 show_plots=not args.no_plots,
                 save_plots=args.save_plots,
                 output_dir=args.output_dir,
-                standalone=args.standalone
+                standalone=args.standalone,
+                validate=args.validate
             )
         else:
             # Process strategy by name
@@ -161,7 +164,8 @@ def main(args):
                 strategy_name=args.strategy,
                 show_plots=not args.no_plots,
                 save_plots=args.save_plots,
-                output_dir=args.output_dir
+                output_dir=args.output_dir,
+                validate=args.validate
             )
     
     except SecurityError as e:

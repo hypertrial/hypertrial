@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Strategy loading and management functionality for the HyperTrial framework.
+Strategy loading and management functionality for the Hypertrial framework.
 """
 import os
 import inspect

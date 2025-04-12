@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-File handling utilities for the HyperTrial framework.
+File handling utilities for the Hypertrial framework.
 """
 import os
 import logging

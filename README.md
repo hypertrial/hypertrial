@@ -28,6 +28,7 @@ As a tournament participant, your task is to develop and submit a custom DCA str
 - **Cross-Cycle Analysis**: See how your strategy performs across different Bitcoin market cycles
 - **Equal Evaluation**: All strategies tested against the same historical data
 - **Security Scanning**: All submissions undergo thorough security analysis with Bandit
+- **Validation Checks**: All strategies are validated by default to ensure they meet submission criteria
 
 ## Security Verification
 
@@ -95,7 +96,9 @@ pip install -e .  # Install in development mode
 
 ### Command Line Interface
 
-You can interact with Hypertrial directly from the command line:
+You can interact with Hypertrial directly from the command line. Here's a comprehensive list of all available commands and flags:
+
+#### Basic Usage
 
 ```bash
 # List all available strategies
@@ -109,7 +112,30 @@ python -m core.main --strategy-file path/to/my_strategy.py --standalone
 
 # Test a strategy file while still loading registered strategies
 python -m core.main --strategy-file path/to/my_strategy.py
+```
 
+#### Running Example Strategy from Tutorials
+
+```bash
+# Run example_strategy.py in standalone mode (with validation enabled by default)
+python -m core.main --strategy-file tutorials/example_strategy.py --standalone
+
+# Run example_strategy.py without validation checks
+python -m core.main --strategy-file tutorials/example_strategy.py --standalone --no-validate
+
+# Run example_strategy.py with custom data file
+python -m core.main --strategy-file tutorials/example_strategy.py --standalone --data-file custom_data.csv
+
+# Run example_strategy.py (dynamic_dca_10ma) as a registered strategy if it's been registered
+python -m core.main --strategy dynamic_dca_10ma
+
+# Save plots from example_strategy.py to the results directory
+python -m core.main --strategy-file tutorials/example_strategy.py --standalone --save-plots --output-dir results
+```
+
+#### Batch Processing
+
+```bash
 # Run backtest for all registered strategies
 python -m core.main --backtest-all --output-dir results
 
@@ -127,34 +153,86 @@ python -m core.main --strategy-dir strategies/ --processes 4 --output-dir result
 
 # Process large sets of strategies in batches of 10 to manage memory
 python -m core.main --glob-pattern "*.py" --batch-size 10 --output-dir results
+```
 
+#### Display and Output Options
+
+```bash
 # Disable plots during backtest
 python -m core.main --strategy my_strategy --no-plots
 
-Key features of the command line interface:
+# Save plots to files instead of displaying them
+python -m core.main --strategy dynamic_dca --save-plots --output-dir plots_dir
 
-- `--list`: List all available strategies
-- `--strategy`: Run backtest with a specific strategy
-- `--strategy-file`: Test a single strategy file
-- `--standalone`: Run a strategy file in isolation without loading other strategies
-- `--backtest-all`: Run backtest for all registered strategies
-- `--strategy-files`: Backtest multiple strategy files from custom paths
-- `--strategy-dir`: Backtest all Python files in a directory
-- `--glob-pattern`: Backtest files matching a glob pattern
-- `--processes`: Process many strategies in parallel (specify number of processes)
-- `--batch-size`: Process large sets of strategies in batches to manage memory
-- `--no-plots`: Disable plots during backtest
-- `--output-dir`: Specify output directory for results
-- `--data-file`: Specify a custom data file
-- `--download-data`: Force download of fresh BTC price data
-- `--save-plots`: Save plots to files instead of displaying them
-- `--recursive`: Search directories recursively when using --strategy-dir
-- `--exclude-dirs`: Exclude specific directories from search
-- `--exclude-patterns`: Exclude files matching specific patterns
-- `--include-patterns`: Include only files matching specific patterns
-- `--max-files`: Limit the number of files to process
-- `--file-timeout`: Specify timeout (in seconds) for processing each file
+# Process strategies with a custom timeout (in seconds)
+python -m core.main --strategy-dir strategies/ --file-timeout 120
 ```
+
+#### Data Management
+
+```bash
+# Force download fresh Bitcoin price data
+python -m core.main --strategy dynamic_dca --download-data
+
+# Use a custom data file
+python -m core.main --strategy dynamic_dca --data-file path/to/custom_data.csv
+```
+
+#### Directory and File Filtering
+
+```bash
+# Recursively search directories
+python -m core.main --strategy-dir strategies/ --recursive
+
+# Exclude specific directories
+python -m core.main --strategy-dir strategies/ --exclude-dirs tests __pycache__
+
+# Exclude files matching specific patterns
+python -m core.main --strategy-dir strategies/ --exclude-patterns test_*.py *_draft.py
+
+# Include only files matching specific patterns
+python -m core.main --strategy-dir strategies/ --include-patterns *_final.py *_v2.py
+
+# Limit the number of files to process
+python -m core.main --strategy-dir strategies/ --max-files 50
+```
+
+#### Validation Control
+
+```bash
+# Disable validation checks (validation is enabled by default)
+python -m core.main --strategy dynamic_dca --no-validate
+
+# Run with validation explicitly enabled (default behavior)
+python -m core.main --strategy dynamic_dca
+```
+
+### All Available Command-Line Options
+
+| Flag                 | Shorthand | Description                                                    |
+| -------------------- | --------- | -------------------------------------------------------------- |
+| `--strategy`         | `-s`      | Strategy to use for backtesting (default: dynamic_dca)         |
+| `--strategy-file`    | `-f`      | Path to a standalone Python strategy file for backtesting      |
+| `--strategy-files`   | `-fs`     | List of paths to Python strategy files for batch backtesting   |
+| `--strategy-dir`     | `-sd`     | Directory containing Python strategy files to backtest         |
+| `--glob-pattern`     | `-gp`     | Glob pattern for finding strategy files                        |
+| `--processes`        | `-p`      | Number of parallel processes to use (0=auto, 1=sequential)     |
+| `--batch-size`       | `-bs`     | Process strategies in batches to manage memory (0=no batching) |
+| `--file-timeout`     | `-ft`     | Maximum seconds allowed per strategy file (0=no timeout)       |
+| `--exclude-dirs`     | `-ed`     | Directories to exclude when searching for files                |
+| `--exclude-patterns` | `-ep`     | File patterns to exclude when searching                        |
+| `--recursive`        | `-r`      | Recursively search for Python files in subdirectories          |
+| `--include-patterns` | `-ip`     | File patterns to include when searching                        |
+| `--max-files`        | `-mf`     | Maximum number of files to process (default: 100)              |
+| `--standalone`       | `-st`     | Run only the specified strategy file without loading others    |
+| `--save-plots`       | `-sp`     | Save plots to files in the output directory                    |
+| `--list`             | `-l`      | List all available strategies                                  |
+| `--no-plots`         | `-n`      | Disable plotting (only show numeric results)                   |
+| `--backtest-all`     | `-a`      | Backtest all available strategies and output results           |
+| `--output-dir`       | `-o`      | Directory to store results (default: results)                  |
+| `--download-data`    | `-d`      | Force download of fresh BTC price data                         |
+| `--data-file`        | `-df`     | Path to the price data CSV file                                |
+| `--no-validate`      | `-nv`     | Disable strategy validation (validation is ON by default)      |
 
 ### Standalone Strategy Testing
 
@@ -231,10 +309,12 @@ python -m core.main --backtest-all --output-dir results
   - `plots.py`: Visualization functions for strategy performance
   - `config.py`: Configuration parameters for the backtest
   - `security/`: Security verification and resource monitoring system
+  - `spd_checks.py`: Strategy validation system for submission criteria
 - `tutorials/`: Jupyter notebooks providing guidance and the submission template.
   - `1. Intro.ipynb`: Introduction to the platform.
   - `2. Challenge Overview.ipynb`: Details about the competition.
   - `3. Submission_Template.ipynb`: **Notebook for creating and testing your strategy.**
+  - `example_strategy.py`: Example strategy implementation (dynamic_dca_10ma)
 - `submit_strategies/`: **Directory for final tournament submissions (exported .py files)**
   - `STRATEGIES.md`: Detailed tournament submission instructions (supplements the notebook).
 - `tests/`: Test suite

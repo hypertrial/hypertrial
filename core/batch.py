@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Batch processing functionality for the HyperTrial framework.
+Batch processing functionality for the Hypertrial framework.
 """
 import os
 import time
@@ -9,86 +9,73 @@ import pandas as pd
 import multiprocessing as mp
 from core.strategy_loader import process_strategy_file, process_strategy_file_with_timeout
 from core.config import BACKTEST_START, BACKTEST_END
+from core.strategy_processor import process_single_strategy
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 def _run_single_backtest(args):
     """
-    Run a single backtest for multiprocessing pool with security checks
+    Run a single backtest, used for parallel processing.
     
     Args:
-        args (tuple): (btc_df, strategy_name, show_plots)
+        args (tuple): Tuple containing (df, strategy_file, output_dir, show_plots)
         
     Returns:
-        tuple: (strategy_name, results_df, summary_dict)
+        tuple: (strategy_name, success)
     """
-    btc_df, strategy_name, show_plots = args
-    logger.info(f"Starting backtest for strategy: {strategy_name}")
-    start_time = time.time()
-    
+    df, strategy_file, output_dir, show_plots, validate = args
     try:
-        # Load strategies in this process with security checks
-        from core.strategies import load_strategies
-        load_strategies()
+        # Temporarily redirect stdout/stderr
+        import sys
+        from io import StringIO
         
-        # Get the strategy with security wrapper
-        from core.strategies import get_strategy
-        strategy_fn = get_strategy(strategy_name)
+        # Save original stdout/stderr
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
         
-        # Run the backtest with security monitoring
-        from core.spd import backtest_dynamic_dca
-        df_res = backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=show_plots)
+        # Create string buffers for stdout/stderr
+        stdout_buf = StringIO()
+        stderr_buf = StringIO()
         
-        # Add strategy name
-        df_res['strategy'] = strategy_name
+        # Redirect stdout/stderr to buffers
+        sys.stdout = stdout_buf
+        sys.stderr = stderr_buf
         
-        # Get the bandit threat level for this strategy
-        core_dir = os.path.dirname(os.path.abspath(__file__))
-        root_dir = os.path.dirname(core_dir)
+        # Process the strategy
+        process_single_strategy(df, strategy_file=strategy_file, show_plots=show_plots, 
+                                save_plots=True, output_dir=output_dir, validate=validate)
         
-        # First check if it's a custom strategy
-        custom_strategy_path = os.path.join(root_dir, 'submit_strategies', f"{strategy_name}.py")
-        if os.path.exists(custom_strategy_path):
-            from core.security.utils import get_bandit_threat_level
-            bandit_threat = get_bandit_threat_level(custom_strategy_path)
-        else:
-            # Must be a core strategy
-            core_strategy_path = os.path.join(core_dir, 'strategies', f"{strategy_name}.py")
-            from core.security.utils import get_bandit_threat_level
-            bandit_threat = get_bandit_threat_level(core_strategy_path)
+        # Restore original stdout/stderr
+        sys.stdout = orig_stdout
+        sys.stderr = orig_stderr
         
-        # Create summary
-        summary = {
-            'strategy': strategy_name,
-            'min_spd': df_res['dynamic_spd'].min(),
-            'max_spd': df_res['dynamic_spd'].max(),
-            'mean_spd': df_res['dynamic_spd'].mean(),
-            'median_spd': df_res['dynamic_spd'].median(),
-            'min_pct': df_res['dynamic_pct'].min(),
-            'max_pct': df_res['dynamic_pct'].max(),
-            'mean_pct': df_res['dynamic_pct'].mean(),
-            'median_pct': df_res['dynamic_pct'].median(),
-            'avg_excess_pct': df_res['excess_pct'].mean(),
-            'runtime_seconds': time.time() - start_time,
-            'score': 72.5,
-            'statements': 35,
-            'cyclomatic': 8,
-            'nesting': 4,
-            'high_threats': bandit_threat['high_threat_count'],
-            'medium_threats': bandit_threat['medium_threat_count'], 
-            'low_threats': bandit_threat['low_threat_count'],
-            'total_threats': bandit_threat['total_threat_count']
-        }
+        # Extract strategy name from file path
+        import os
+        strategy_name = os.path.splitext(os.path.basename(strategy_file))[0]
         
-        logger.info(f"Completed backtest for strategy: {strategy_name} in {summary['runtime_seconds']:.2f} seconds")
-        return strategy_name, df_res, summary
+        # Print any output
+        print(f"\nOutput from processing {strategy_name}:")
+        print(stdout_buf.getvalue())
         
+        # Print any errors
+        if stderr_buf.getvalue():
+            print(f"\nErrors from processing {strategy_name}:")
+            print(stderr_buf.getvalue())
+        
+        return (strategy_name, True)
     except Exception as e:
-        logger.error(f"Error running strategy {strategy_name}: {str(e)}")
-        raise
+        import traceback
+        print(f"Error processing {strategy_file}: {str(e)}")
+        print(traceback.format_exc())
+        
+        # Extract strategy name from file path
+        import os
+        strategy_name = os.path.splitext(os.path.basename(strategy_file))[0]
+        
+        return (strategy_name, False)
 
-def backtest_all_strategies(btc_df, output_dir, show_plots=False):
+def backtest_all_strategies(btc_df, output_dir, show_plots=False, validate=True):
     """
     Backtest all available strategies and output results to CSV files with security checks
     """
@@ -119,7 +106,7 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False):
         try:
             with mp.Pool(processes=num_processes) as pool:
                 # Set up the arguments - each strategy will be processed with the same dataframe
-                args_list = [(btc_df, strategy_name, show_plots) for strategy_name in strategies]
+                args_list = [(btc_df, strategy_name, output_dir, show_plots, validate) for strategy_name in strategies]
                 
                 # Process in parallel with error handling
                 results = []
@@ -154,7 +141,7 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False):
                 from core.spd import backtest_dynamic_dca
                 df_res = backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=show_plots)
                 
-                # Add strategy name to results
+                # Add strategy name
                 df_res['strategy'] = strategy_name
                 all_spd_results.append(df_res)
                 
@@ -230,7 +217,7 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False):
     
     return summary_df
 
-def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_plots=False, processes=0, batch_size=0, file_timeout=60):
+def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_plots=False, processes=0, batch_size=0, file_timeout=60, validate=True):
     """
     Backtest multiple strategy files from different paths and output results to CSV files
     
@@ -242,6 +229,7 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
         processes (int): Number of parallel processes (0=auto, 1=sequential)
         batch_size (int): Process files in batches of this size (0=no batching)
         file_timeout (int): Maximum seconds allowed for processing each file (0=no timeout)
+        validate (bool): Whether to validate strategies against submission criteria
     
     Returns:
         pd.DataFrame: Summary results
@@ -304,21 +292,21 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
                 # Prepare arguments for the processing function
                 if file_timeout > 0:
                     # Add timeout to each file's processing
-                    args_list = [((strategy_file, btc_df, show_plots), file_timeout) for strategy_file in batch]
+                    args_list = [(btc_df, strategy_file, output_dir, show_plots, validate) for strategy_file in batch]
                     batch_results = []
                     
                     # Process with progress reporting
-                    for i, result in enumerate(pool.imap_unordered(process_strategy_file_with_timeout, args_list)):
+                    for i, result in enumerate(pool.imap_unordered(_run_single_backtest, args_list)):
                         batch_results.append(result)
                         if (i+1) % max(1, len(batch)//10) == 0 or i+1 == len(batch):
                             logger.info(f"  Progress: {i+1}/{len(batch)} files processed in batch {batch_idx+1}")
                 else:
                     # Process without timeout
-                    args_list = [(strategy_file, btc_df, show_plots) for strategy_file in batch]
+                    args_list = [(btc_df, strategy_file, output_dir, show_plots, validate) for strategy_file in batch]
                     batch_results = []
                     
                     # Process with progress reporting
-                    for i, result in enumerate(pool.imap_unordered(process_strategy_file, args_list)):
+                    for i, result in enumerate(pool.imap_unordered(_run_single_backtest, args_list)):
                         batch_results.append(result)
                         if (i+1) % max(1, len(batch)//10) == 0 or i+1 == len(batch):
                             logger.info(f"  Progress: {i+1}/{len(batch)} files processed in batch {batch_idx+1}")
@@ -330,9 +318,9 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
             batch_summaries = []
             for i, strategy_file in enumerate(batch):
                 if file_timeout > 0:
-                    result = process_strategy_file_with_timeout(((strategy_file, btc_df, show_plots), file_timeout))
+                    result = _run_single_backtest((btc_df, strategy_file, output_dir, show_plots, validate))
                 else:
-                    result = process_strategy_file((strategy_file, btc_df, show_plots))
+                    result = _run_single_backtest((btc_df, strategy_file, output_dir, show_plots, validate))
                     
                 if result is not None:
                     batch_summaries.append(result)

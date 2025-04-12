@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description='HyperTrial Backtesting Framework')
+    parser = argparse.ArgumentParser(description='Hypertrial Backtesting Framework')
     parser.add_argument(
         '--strategy', '-s', 
         default='dynamic_dca',
@@ -125,6 +125,11 @@ def parse_args():
         default='core/data/btc_price_data.csv',
         help='Path to the price data CSV file'
     )
+    parser.add_argument(
+        '--no-validate', '-nv',
+        action='store_true',
+        help='Disable strategy validation against submission criteria'
+    )
     return parser.parse_args()
 
 def cli_main():
@@ -138,6 +143,8 @@ def cli_main():
     try:
         # Parse arguments and pass to main function
         args = parse_args()
+        # Set validate to True by default, unless --no-validate is specified
+        args.validate = not args.no_validate
         main(args)
         return 0
     except Exception as e:

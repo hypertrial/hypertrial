@@ -35,6 +35,9 @@ from core.spd import backtest_dynamic_dca, compute_cycle_spd, list_available_str
 # Import strategy functions
 from core.strategies import load_strategies, get_strategy, list_strategies
 
+# Import SPD validation checks
+from core.spd_checks import check_strategy_submission_ready, compute_cycle_spd as checks_compute_cycle_spd
+
 # Import plotting functions
 from core.plots import (
     plot_price_vs_lookback_avg,
@@ -54,11 +57,15 @@ def main():
     from core.commands. This is used for tests that import main directly.
     """
     args = parse_args()
+    # Set validate to True by default, unless --no-validate is specified
+    args.validate = not args.no_validate
     return commands_main(args)
 
 if __name__ == "__main__":
     try:
         args = parse_args()
+        # Set validate to True by default, unless --no-validate is specified
+        args.validate = not args.no_validate
         commands_main(args)
     except Exception as e:
         logger.error(f"Error: {str(e)}")
