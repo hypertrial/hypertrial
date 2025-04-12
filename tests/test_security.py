@@ -527,7 +527,7 @@ def get_external_data():
         # Test code with network access patterns
         network_patterns = [
             ("import requests", True),
-            ("import pandas_datareader as web", False),  # Allowed
+            ("import pandas_datareader as web", True),  # Now banned/disallowed
         ]
         
         for pattern, should_fail in network_patterns:
@@ -828,13 +828,13 @@ def test_pandas_strategy(df):
                 del os.environ['SECURITY_TEST']
 
     def test_pandas_datareader_whitelist(self):
-        """Test that only allowed pandas_datareader functions can be used"""
-        # Test code with pandas_datareader patterns
+        """Test that pandas_datareader is completely blocked"""
+        # Test code with pandas_datareader patterns - all should fail now
         datareader_patterns = [
-            ("import pandas_datareader as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", False),  # Allowed
-            ("import pandas_datareader.data as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", False),  # Allowed
-            ("import pandas_datareader as web; web.get_data_yahoo('AAPL', '2020-01-01', '2021-01-01')", False),  # Allowed
-            ("import pandas_datareader as web; web.get_nasdaq_symbols()", False),  # Allowed
+            ("import pandas_datareader as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", True),  # No longer allowed
+            ("import pandas_datareader.data as web; web.DataReader('AAPL', 'yahoo', '2020-01-01', '2021-01-01')", True),  # No longer allowed
+            ("import pandas_datareader as web; web.get_data_yahoo('AAPL', '2020-01-01', '2021-01-01')", True),  # No longer allowed
+            ("import pandas_datareader as web; web.get_nasdaq_symbols()", True),  # No longer allowed
             ("import pandas_datareader as web; web._utils.get_headers()", True),  # Not allowed
             ("import pandas_datareader as web; web._DailyBaseReader('AAPL', 'yahoo')", True),  # Not allowed
         ]

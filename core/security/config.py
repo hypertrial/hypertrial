@@ -2,9 +2,16 @@
 
 # Allowed modules for strategy submissions
 ALLOWED_MODULES = {
-    'pandas', 'numpy', 'datetime', 'typing',
+    # Core dependencies from requirements.txt
+    'pandas', 'numpy', 'matplotlib', 'coinmetrics_api_client', 'coinmetrics',
+    'pytest', 'scipy', 'psutil', 'bandit', 'safety', 'pylint',
+    
+    # Standard library modules needed for strategy operation
+    'datetime', 'typing', 'time',
+    
+    # Framework modules
     'core.config', 'core.strategies', 'core.strategies.base_strategy',
-    'submit_strategies', 'pandas_datareader', 'scipy', 'time'
+    'submit_strategies'
 }
 
 # Allow specific os.path functions only
@@ -15,7 +22,7 @@ ALLOWED_OS_FUNCTIONS = {
 # Explicitly banned modules (will be checked in addition to not being in ALLOWED_MODULES)
 BANNED_MODULES = {
     # Network and HTTP
-    'requests', 'urllib', 'http', 'socket', 
+    'requests', 'urllib', 'http', 'socket', 'pandas_datareader',
     
     # Process and system
     'subprocess', 'multiprocessing', 'threading', 'asyncio', 'concurrent',
@@ -164,15 +171,4 @@ BANDIT_CONF = {
     }
 }
 
-# Explicitly allowed pandas_datareader functions (whitelist approach)
-ALLOWED_PANDAS_DATAREADER = {
-    'DataReader',              # Main data fetching function
-    'get_data_yahoo',          # Yahoo finance data
-    'get_data_fred',           # Federal Reserve Economic Data
-    'get_data_stooq',          # Stooq data
-    'get_data_alpha_vantage',  # Alpha Vantage data
-    'get_data_naver',          # Naver finance data
-    'get_nasdaq_symbols',      # NASDAQ symbols
-    'get_iex_symbols',         # IEX symbols
-    'get_tiingo_symbols'       # Tiingo symbols
-} 
+# Explicitly allowed pandas_datareader functions (whitelist approach) - REMOVED since pandas_datareader is now banned 

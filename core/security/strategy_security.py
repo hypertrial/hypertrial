@@ -9,8 +9,7 @@ from urllib.parse import urlparse
 
 from core.security.utils import is_test_mode
 from core.security.config import (
-    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES, BANNED_MODULES,
-    ALLOWED_PANDAS_DATAREADER
+    ALLOWED_MODULES, ALLOWED_OS_FUNCTIONS, ALLOWED_DATA_SOURCES, BANNED_MODULES
 )
 from core.security.complexity_analyzer import ComplexityAnalyzer
 from core.security.data_flow_analyzer import DataFlowAnalyzer
@@ -71,19 +70,6 @@ class StrategySecurity:
                     else:
                         # Block all DataFrame output operations in production
                         raise SecurityError(f"DataFrame write operation detected: {method_name}()")
-                
-                # Check for pandas_datareader functions
-                if hasattr(node.func.value, 'id') and node.func.value.id == 'web':
-                    # Check for internal/private methods which should be blocked
-                    if method_name.startswith('_') or (
-                        hasattr(node.func.value, 'attr') and 
-                        node.func.value.attr is not None and 
-                        node.func.value.attr.startswith('_')
-                    ):
-                        raise SecurityError(f"Access to internal pandas_datareader methods not allowed: {method_name}")
-                    # If using pandas_datareader (web)
-                    elif method_name not in ALLOWED_PANDAS_DATAREADER:
-                        raise SecurityError(f"Unauthorized pandas_datareader function: web.{method_name}()")
             
             # Check for dangerous attribute access
             if isinstance(node, ast.Attribute):

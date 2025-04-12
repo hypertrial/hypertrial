@@ -20,6 +20,46 @@ pip install -e .
 
 The PyPI package can be found at: https://pypi.org/project/hypertrial/
 
+## Complete Test Suite
+
+The test suite includes the following test files:
+
+### Tournament Submission Tests
+
+- `test_submit_strategies.py`: Tests strategies submitted to the `submit_strategies` directory
+- `test_strategy_file.py`: Tests loading and executing standalone strategy files
+- `test_strategy_files.py`: Tests batch loading of multiple strategy files
+
+### Security Tests
+
+- `test_security.py`: Main security tests for strategy validation and sandboxing
+- `test_bandit_security.py`: Tests for Bandit security analysis on submitted strategies
+
+### Data Tests
+
+- `test_data_basic.py`: Tests for basic data loading and validation
+- `test_data_download.py`: Tests for data downloading functionality
+- `test_data_download_integration.py`: Tests data integration with real-world sources
+
+### Package Tests
+
+- `test_installation.py`: Tests for proper package installation
+- `test_setup.py`: Tests for proper package setup
+- `test_package_deployment.py`: Tests for package deployment
+- `test_installed_package.py`: Tests for installed package functionality
+- `test_dist_files.py`: Tests for distribution files
+
+### Requirements and Version Tests
+
+- `test_requirements_compatibility.py`: Tests compatibility between packages in requirements.txt
+- `test_version_constraints.py`: Tests version constraints in requirements.txt
+- `test_validation_default.py`: Tests default validation configurations
+- `test_spd_checks.py`: Tests software package data integrity checks
+
+### CLI Tests
+
+- `test_cli.py`: Tests command-line interface functionality
+
 ## Tournament Test Focus
 
 As a tournament participant, you should focus on the `test_submit_strategies.py` file, which specifically tests strategies submitted to the `submit_strategies` directory.
@@ -107,6 +147,48 @@ The tests in `test_submit_strategies.py` check your strategy for:
 5. **Performance Comparison**: Your strategy can be compared against baseline strategies
 6. **Security Compliance**: Your strategy passes security validation checks
 
+## Requirements and Version Compatibility Tests
+
+The framework includes comprehensive tests to ensure that all required packages are compatible with each other and meet the specified version constraints.
+
+### Requirements Compatibility Tests
+
+The `test_requirements_compatibility.py` file contains tests that:
+
+1. Parse `requirements.txt` to extract package and version constraints
+2. Verify that all packages can be imported successfully
+3. Test compatibility between key packages:
+   - NumPy and Pandas integration
+   - Matplotlib visualization with NumPy/Pandas data
+   - SciPy numerical functions with NumPy arrays
+   - CoinMetrics API client functionality
+   - Code quality tools like pytest, bandit, safety, and pylint
+   - System monitoring with psutil
+
+To run the requirements compatibility tests:
+
+```bash
+pytest tests/test_requirements_compatibility.py -v
+```
+
+### Version Constraints Tests
+
+The `test_version_constraints.py` file contains tests that:
+
+1. Verify that installed package versions satisfy constraints in `requirements.txt`
+2. Test compatibility between specific version ranges:
+   - Pandas 2.0+ with NumPy 2.0+
+   - Latest matplotlib with Pandas/NumPy
+   - Latest SciPy with NumPy
+
+To run the version constraints tests:
+
+```bash
+pytest tests/test_version_constraints.py -v
+```
+
+These tests are especially important when upgrading dependencies to ensure that newer versions continue to work correctly with the codebase.
+
 ## Security Checks
 
 The framework implements comprehensive security checks to ensure that submitted strategies do not contain potentially harmful code. Your strategy must pass all security checks to be considered valid.
@@ -162,7 +244,8 @@ The framework enforces the following resource limits:
 
 Your strategy may only import from these modules:
 
-- `pandas`, `numpy`, `scipy` (data science libraries)
+- `pandas`, `numpy`, `matplotlib`, `scipy` (data science libraries)
+- `coinmetrics` / `coinmetrics_api_client` (for data access)
 - `datetime`, `time` (time handling)
 - `typing` (type annotations)
 - `core.config`, `core.strategies`, `core.strategies.base_strategy` (framework modules)
@@ -334,6 +417,27 @@ If your strategy runs but performs poorly:
 - Verify your normalization logic works as expected
 - Cache external data to avoid repeated API calls
 
+## Running All Tests
+
+To run the complete test suite:
+
+```bash
+pytest
+```
+
+To run specific categories of tests:
+
+```bash
+# Tournament submission tests
+pytest tests/test_submit_strategies.py tests/test_strategy_file.py
+
+# Security tests
+pytest tests/test_security.py tests/test_bandit_security.py
+
+# Requirements and version compatibility tests
+pytest tests/test_requirements_compatibility.py tests/test_version_constraints.py
+```
+
 ## Detailed Test Structure
 
 The `test_submit_strategies.py` file contains two main test classes:
@@ -349,15 +453,6 @@ The `test_submit_strategies.py` file contains two main test classes:
 2. **`TestDynamicSubmitStrategies`**: Tests creating and running strategies dynamically
    - Creates a temporary strategy file
    - Tests loading, execution, and backtesting
-
-## Other Tests (For Reference Only)
-
-The remaining tests in the framework are for reference and validate the core system functionality:
-
-- `test_security.py`: Tests for security validation and sandboxing
-- `core/strategies/`: Tests for strategy registration and baseline strategies
-- `core/`: Tests for data handling, performance calculation, and visualization
-- `test_installation.py`: Tests for proper installation of the framework
 
 ## Generating Test Reports
 
