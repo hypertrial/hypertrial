@@ -215,3 +215,12 @@ logs/
 # Test data that shouldn't be committed
 test_data/
 mock_data/
+
+*.csv
+*.tsv
+*.json
+*.jsonl
+*.jsonl.gz
+*.jsonl.gz.part
+*.jsonl.gz.part.1
+*.jsonl.gz.part.2
