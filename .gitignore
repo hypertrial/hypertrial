@@ -224,3 +224,5 @@ mock_data/
 *.jsonl.gz.part
 *.jsonl.gz.part.1
 *.jsonl.gz.part.2
+
+results/
