@@ -45,6 +45,8 @@ The test suite includes the following test files:
 - `test_data_basic.py`: Tests for basic data loading and validation
 - `test_data_download.py`: Tests for data downloading functionality
 - `test_data_download_integration.py`: Tests data integration with real-world sources
+- `core/test_data_formats.py`: Tests data format validation and conversion
+- `core/test_data_validation.py`: Tests data validation rules and constraints
 
 ### Package Tests
 
@@ -54,12 +56,35 @@ The test suite includes the following test files:
 - `test_installed_package.py`: Tests for installed package functionality
 - `test_dist_files.py`: Tests for distribution files
 
+### Core Module Coverage Tests
+
+The following tests ensure comprehensive coverage of core functionality:
+
+- `test_file_utils.py`: Tests file utility functions for strategy discovery and path management
+- `test_plots.py`: Tests visualization functions with a non-interactive Matplotlib backend
+- `test_config.py`: Tests configuration constants and their constraints
+- `test_batch.py`: Tests batch processing of strategies and parallel execution
+- `test_strategy_processor.py`: Tests strategy processing with validation and backtest integration
+- `test_strategy_loader.py`: Tests dynamic loading of strategy files with timeout handling
+- `core/test_error_handling.py`: Tests error handling and graceful failure modes
+
+### Strategy Tests
+
+- `core/strategies/test_strategy_registration.py`: Tests strategy registration system
+- `core/strategies/test_dynamic_strategy.py`: Tests dynamic strategy generation
+- `core/strategies/test_uniform_strategy.py`: Tests uniform strategy allocation
+- `core/test_strategy_performance.py`: Tests strategy performance metrics and calculations
+
 ### Requirements and Version Tests
 
 - `test_requirements_compatibility.py`: Tests compatibility between packages in requirements.txt
 - `test_version_constraints.py`: Tests version constraints in requirements.txt
 - `test_validation_default.py`: Tests default validation configurations
 - `test_spd_checks.py`: Tests software package data integrity checks
+- `core/test_spd_calculation.py`: Tests SPD calculation algorithms
+- `core/test_spd_integration.py`: Tests SPD integration with other system components
+- `core/test_spd_advanced.py`: Tests advanced SPD features and edge cases
+- `core/test_performance_benchmarks.py`: Tests strategy performance benchmarks
 
 ### CLI Tests
 
@@ -473,6 +498,18 @@ pytest tests/test_requirements_compatibility.py tests/test_version_constraints.p
 
 # Tutorial and example strategy tests
 pytest tests/test_example_strategy.py tests/test_tutorial_commands.py
+
+# Core module tests
+pytest tests/core/
+
+# Strategy module tests
+pytest tests/core/strategies/
+
+# Data validation and format tests
+pytest tests/core/test_data_*.py
+
+# SPD (Software Package Data) tests
+pytest tests/test_spd_*.py tests/core/test_spd_*.py
 ```
 
 ## Detailed Test Structure
@@ -559,3 +596,55 @@ df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
 weights = pd.Series(index=df_backtest.index, data=0.0)
 # Fill in weights...
 ```
+
+## Test Coverage Goals
+
+The test suite aims to provide comprehensive coverage of all core functionality to ensure:
+
+1. **Robustness**: Every core module is tested for expected behavior and error handling
+2. **Edge Cases**: Unusual inputs and error conditions are tested systematically
+3. **Integration**: Modules work correctly together when combined
+4. **Security**: Security validation functions perform as expected
+5. **Configuration**: System constants are properly defined and constrained
+
+The new test files provide dedicated coverage for previously under-tested components:
+
+- `test_file_utils.py` tests the strategy file discovery and filtering system
+- `test_plots.py` verifies visualization functions work correctly using a non-interactive backend
+- `test_config.py` ensures configuration constants are properly defined
+- `test_batch.py` tests the parallel processing and batching capabilities
+- `test_strategy_processor.py` tests the strategy execution pipeline
+- `test_strategy_loader.py` tests dynamic module loading with timeout protection
+
+## Running Tests with Coverage
+
+To run tests with coverage reporting:
+
+```bash
+# Install pytest-cov
+pip install pytest-cov
+
+# Run tests with coverage for core modules
+pytest tests/ --cov=core --cov-report=term-missing
+```
+
+This will show which lines in the core modules are covered by tests and identify any gaps in coverage.
+
+## Test Directory Organization
+
+The test suite is organized into the following directory structure:
+
+- `tests/`: Root directory containing main test files
+  - `core/`: Core module-specific tests
+    - `strategies/`: Strategy-specific tests for core functionality
+  - `.pytest_cache/`: Pytest cache directory (automatically generated)
+  - `__pycache__/`: Python cache directory (automatically generated)
+
+This organization allows for:
+
+1. **Modular Testing**: Each component has dedicated test files focused on its functionality
+2. **Hierarchical Structure**: Tests are grouped by module and submodule
+3. **Isolation**: Core tests can be run separately from submission and integration tests
+4. **Maintainability**: New tests can be added to the appropriate directory as the system evolves
+
+When adding your own strategies for testing, you should focus on the main `tests/` directory and specifically the `test_submit_strategies.py` file which verifies tournament submissions.

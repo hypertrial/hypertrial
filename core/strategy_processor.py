@@ -3,10 +3,12 @@
 Strategy processing and execution functionality for the Hypertrial framework.
 """
 import logging
+import core.strategies  # Import the module explicitly for patching
 from core.config import BACKTEST_START
 from core.spd import backtest_dynamic_dca, compute_spd_metrics, standalone_plot_comparison
 from core.plots import plot_price_vs_lookback_avg, plot_final_weights, plot_weight_sums_by_cycle
 from core.spd_checks import check_strategy_submission_ready
+from core.strategy_loader import load_strategy_from_file, find_strategy_class
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -25,9 +27,6 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         standalone (bool): Whether to run in standalone mode
         validate (bool): Whether to validate strategy against submission criteria (True by default)
     """
-    from core.strategy_loader import load_strategy_from_file, find_strategy_class
-    from core.strategies import get_strategy, list_strategies
-    
     strategy_fn = None
     strategy_class = None
     
@@ -40,13 +39,13 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
     else:
         try:
             # Get the requested strategy with security checks
-            strategy_fn = get_strategy(strategy_name)
+            strategy_fn = core.strategies.get_strategy(strategy_name)
             # Find the strategy class
             strategy_class = find_strategy_class(strategy_name)
         except ValueError as e:
             logger.error(f"Strategy not found: {strategy_name}")
             logger.error("Available strategies:")
-            for name in list_strategies():
+            for name in core.strategies.list_strategies():
                 logger.error(f" - {name}")
             return
     
@@ -91,8 +90,6 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
     # Run SPD backtest and plot results with security checks
     if standalone and strategy_file:
         # In standalone mode, only compute SPD for the specified strategy
-        from core.spd import compute_spd_metrics, standalone_plot_comparison
-        
         # Print numeric results
         result = compute_spd_metrics(btc_df, weights, strategy_name=strategy_name)
         print(f"\nSPD Metrics for {strategy_name}:")

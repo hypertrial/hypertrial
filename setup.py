@@ -31,7 +31,8 @@ setup(
         "psutil>=5.8.0",
         "bandit>=1.7.0",
         "safety>=2.0.0",
-        "pylint>=2.12.0"
+        "pylint>=3.0.0",
+        "pytest-cov>=6.0.0"
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
