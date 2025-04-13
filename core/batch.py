@@ -91,7 +91,13 @@ def _run_single_backtest(args):
                 validation = metrics_result['validation_results']
                 if isinstance(validation, dict):
                     for key, value in validation.items():
-                        result[f'validation_{key}'] = value
+                        # Ensure the key has the validation_ prefix but don't duplicate it
+                        if key == 'validation_passed':
+                            result['validation_validation_passed'] = value
+                        elif key.startswith('validation_'):
+                            result[key] = value
+                        else:
+                            result[f'validation_{key}'] = value
             
             # Add security results
             if bandit_metrics:
