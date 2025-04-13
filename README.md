@@ -375,3 +375,21 @@ This project is available under the MIT License.
 
 - [CoinMetrics](https://coinmetrics.io/) for their comprehensive Bitcoin price data
 - Inspired by various Bitcoin DCA strategy research
+
+### SPD Validation Tests
+
+The framework provides comprehensive validation for submitted strategies through the SPD (Sats Per Dollar) checks. These tests ensure that strategies meet all tournament requirements and follow best practices.
+
+### SPD Check Validation Output
+
+The validation system has been enhanced to provide detailed validation results that are included in the output CSV files:
+
+1. **Strategy Validation Results**: Running `backtest_all_strategies` or `backtest_multiple_strategy_files` now includes validation results in the output CSV
+2. **Detailed Validation Flags**: The output includes specific flags for each type of validation check:
+   - `validation_passed`: Overall pass/fail status
+   - `has_negative_weights`: Whether the strategy has any negative weights
+   - `has_below_min_weights`: Whether any weights are below the minimum threshold
+   - `weights_not_sum_to_one`: Whether weights sum to 1 within each cycle
+   - `underperforms_uniform`: Whether the strategy performs worse than uniform DCA
+
+> **Note**: The forward-looking check (which previously verified that strategies don't use future data) has been removed from the validation process. Strategies are now evaluated only on the criteria listed above.

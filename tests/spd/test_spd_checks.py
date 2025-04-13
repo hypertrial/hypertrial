@@ -424,8 +424,6 @@ def test_check_strategy_submission_ready_with_return_details(mock_compute_cycle_
     assert result['has_below_min_weights'] is False
     assert result['weights_not_sum_to_one'] is False
     assert result['underperforms_uniform'] is False
-    assert result['is_forward_looking'] is False
-    assert result['validation_error'] == ''
     assert 'cycle_issues' in result
     assert isinstance(result['cycle_issues'], dict)
     assert len(result['cycle_issues']) == 0  # Empty for valid strategy

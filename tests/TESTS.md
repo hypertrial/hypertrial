@@ -213,6 +213,13 @@ The tests in `test_submit_strategies.py` check your strategy for:
 4. **Output Generation**: Your strategy produces valid output for evaluation
 5. **Performance Comparison**: Your strategy can be compared against baseline strategies
 6. **Security Compliance**: Your strategy passes security validation checks
+7. **Strategy Validation**: Your strategy passes all validation criteria:
+   - Contains only positive weights
+   - All weights are above the minimum threshold
+   - Weights sum to 1.0 within each cycle
+   - SPD performance is better than or equal to uniform DCA
+
+> **Note**: The forward-looking check (which previously verified that strategies don't use future data) has been removed from the validation process.
 
 ## Requirements and Version Compatibility Tests
 
@@ -747,7 +754,6 @@ The validation system has been enhanced to provide detailed validation results t
    - `has_below_min_weights`: Whether any weights are below the minimum threshold
    - `weights_not_sum_to_one`: Whether weights sum to 1 within each cycle
    - `underperforms_uniform`: Whether the strategy performs worse than uniform DCA
-   - `is_forward_looking`: Whether the strategy appears to use future data
 
 ### Testing Validation Output
 

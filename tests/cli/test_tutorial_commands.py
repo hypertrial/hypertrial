@@ -87,7 +87,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             "--standalone", 
             "--no-plots"
         ])
-        self.assertIn("dynamic_dca_10ma", result.stdout)
+        self.assertIn("dynamic_dca_200ma", result.stdout)
     
     def test_example_strategy_standalone_with_output_dir(self):
         """Test running example_strategy.py with output directory."""
@@ -97,7 +97,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             "--no-plots",
             "--output-dir", self.output_dir
         ])
-        self.assertIn("dynamic_dca_10ma", result.stdout)
+        self.assertIn("dynamic_dca_200ma", result.stdout)
     
     def test_example_strategy_no_validate(self):
         """Test running example_strategy.py without validation."""
@@ -107,7 +107,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             "--no-plots",
             "--no-validate"
         ])
-        self.assertIn("dynamic_dca_10ma", result.stdout)
+        self.assertIn("dynamic_dca_200ma", result.stdout)
     
     def test_example_strategy_with_save_plots(self):
         """Test running example_strategy.py with saving plots."""
@@ -119,7 +119,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             "--save-plots",
             "--output-dir", self.output_dir
         ])
-        self.assertIn("dynamic_dca_10ma", result.stdout)
+        self.assertIn("dynamic_dca_200ma", result.stdout)
         
         # Check for evidence that plots were saved
         self.assertIn("Plot saved to:", result.stdout + result.stderr)
@@ -285,7 +285,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             "--output-dir", self.output_dir
         ])
         # Just check if the command ran successfully
-        self.assertIn("dynamic_dca_10ma", result.stdout)
+        self.assertIn("dynamic_dca_200ma", result.stdout)
     
     def test_registered_strategy(self):
         """Test running a registered strategy from example_strategy.py."""
@@ -298,7 +298,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             
             # Now try to run it by name
             result = self._run_command([
-                "--strategy", "dynamic_dca_10ma",
+                "--strategy", "dynamic_dca_200ma",
                 "--no-plots",
                 "--output-dir", self.output_dir
             ], check_success=False)
@@ -306,7 +306,7 @@ class TestTutorialCommandsExecution(unittest.TestCase):
             # If the strategy was properly registered, it should run successfully
             # But we also allow for cases where registration didn't work
             if result.returncode == 0:
-                self.assertIn("dynamic_dca_10ma", result.stdout)
+                self.assertIn("dynamic_dca_200ma", result.stdout)
         except:
             # Registration might not work in some test environments, so we'll tolerate failure
             pass

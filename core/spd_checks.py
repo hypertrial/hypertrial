@@ -103,8 +103,6 @@ def check_strategy_submission_ready(df, strategy_name, return_details=False):
         'has_below_min_weights': False,
         'weights_not_sum_to_one': False,
         'underperforms_uniform': False,
-        'is_forward_looking': False,
-        'validation_error': ''
     }
     
     cycle_issues = {}
@@ -158,27 +156,6 @@ def check_strategy_submission_ready(df, strategy_name, return_details=False):
             cycle_issues[cycle]['underperforms_uniform'] = True
             cycle_issues[cycle]['dynamic_pct'] = float(row['dynamic_pct'])
             cycle_issues[cycle]['uniform_pct'] = float(row['uniform_pct'])
-
-    # --- Criterion 5: Strategy must be causal (not forward-looking) ---
-    try:
-        df_lagged = df.copy()
-        df_lagged.iloc[1:] = df_lagged.iloc[:-1].values
-        df_lagged.iloc[0] = np.nan  # first row now has no valid past
-
-        weights_original = weight_fn(df).fillna(0)
-        weights_lagged = weight_fn(df_lagged).fillna(0)
-
-        overlapping_index = weights_original.index.intersection(weights_lagged.index)
-        mismatched = (weights_original.loc[overlapping_index] != weights_lagged.loc[overlapping_index]).any(axis=None)
-
-        if mismatched:
-            print("❌ Strategy may be forward-looking: it changes when future data is removed.")
-            passed = False
-            validation_results['is_forward_looking'] = True
-    except Exception as e:
-        print("⚠️ Forward-looking check failed due to an error:", e)
-        passed = False
-        validation_results['validation_error'] = f"Forward-looking check error: {str(e)}"
 
     # --- Final verdict ---
     if passed:

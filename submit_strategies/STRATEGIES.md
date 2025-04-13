@@ -257,7 +257,14 @@ Consider these approaches for your tournament strategy:
 3. **External data sources are not allowed** (strategies can only use the provided BTC price data)
 4. Your strategy must complete execution in a reasonable time
 5. You must not modify or depend on changes to the core framework
-6. All entries must pass the test suite to qualify
+6. All entries must pass the validation checks to qualify:
+   - Strictly positive weights
+   - Weights above minimum threshold
+   - Weights sum to 1.0 per cycle
+   - SPD performance >= uniform DCA
+
+> **Note**: The forward-looking check (which previously verified that strategies don't use future data) has been removed from the validation process.
+
 7. Only one strategy submission per participant
 8. Your strategy must not have any high or medium severity security issues
 
