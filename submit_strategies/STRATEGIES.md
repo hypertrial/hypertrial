@@ -262,8 +262,14 @@ Consider these approaches for your tournament strategy:
    - Weights above minimum threshold
    - Weights sum to 1.0 per cycle
    - SPD performance >= uniform DCA
+   - Strategy must be causal (not forward-looking)
 
-> **Note**: The forward-looking check (which previously verified that strategies don't use future data) has been removed from the validation process.
+The framework now includes a forward-looking check that verifies strategies don't use future data:
+
+- This check creates a lagged version of the input dataframe where each row only has access to past data
+- It then compares the weights generated with original data versus lagged data
+- If the weights differ, it indicates the strategy is improperly using future information
+- Ensure your indicators only use past data (e.g., use `shift(1)` before calculating moving averages)
 
 7. Only one strategy submission per participant
 8. Your strategy must not have any high or medium severity security issues
@@ -393,6 +399,15 @@ Strategies will be evaluated based on:
 - Ensure all weights are non-negative
 - Make sure to handle the case where all weights in a cycle are zero
 - Verify your normalization gives reasonable weight distributions
+
+### Forward-Looking Issues
+
+- Make sure your strategy does not use future data when calculating indicators
+- Always use `shift(1)` before calculating rolling statistics to ensure only past data is used
+- Example for moving averages: `df['ma200'] = df['btc_close'].shift(1).rolling(window=200).mean()`
+- Ensure your calculations are causal - any feature at time t should only use data up to time t-1
+- Be careful with functions that implicitly use future data (e.g., `.pct_change()` without shifting)
+- If your strategy fails the forward-looking check, examine calculations where current prices may be affecting signals
 
 ## Tournament Schedule
 

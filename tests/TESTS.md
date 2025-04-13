@@ -776,10 +776,34 @@ The validation system has been enhanced to provide detailed validation results t
    - `has_below_min_weights`: Whether any weights are below the minimum threshold
    - `weights_not_sum_to_one`: Whether weights sum to 1 within each cycle
    - `underperforms_uniform`: Whether the strategy performs worse than uniform DCA
+   - `is_forward_looking`: Whether the strategy appears to use future data
+
+### Forward-Looking Check
+
+A new forward-looking check (Criterion 5) has been added to detect strategies that use future information:
+
+1. This check creates a lagged version of the input data where each row only has access to past data
+2. It then compares the weights generated with the original data versus the lagged data
+3. If the weights differ, it indicates the strategy is using future information in its decision making
+4. The test looks specifically for non-causal behavior in strategies
+
+The new test (`test_forward_looking_check`) in `tests/spd/test_spd_checks.py` verifies:
+
+1. That causal strategies properly pass the forward-looking check
+2. That forward-looking strategies are correctly identified
+3. That error handling works properly if exceptions occur during the check
+4. That the validation results dictionary correctly includes the forward-looking status
+
+To run the specific forward-looking test:
+
+```bash
+# Test the forward-looking check
+pytest tests/spd/test_spd_checks.py::test_forward_looking_check -v
+```
 
 ### Testing Validation Output
 
-Three new test categories have been added to verify this functionality:
+Three test categories have been added to verify this functionality:
 
 1. **Detailed Validation Results Test**: `test_check_strategy_submission_ready_with_return_details` in `tests/spd/test_spd_checks.py` tests that the `check_strategy_submission_ready` function correctly returns structured validation results when `return_details=True` is specified.
 

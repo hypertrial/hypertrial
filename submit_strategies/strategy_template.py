@@ -4,135 +4,102 @@ Template for creating a new strategy.
 
 To create a new strategy:
 1. Copy this file to a new file in the 'submit_strategies' directory (e.g., my_strategy.py)
-2. Rename the class and update the docstring
-3. Implement the construct_features and compute_weights methods
-4. Register the strategy with a unique name by uncommenting and modifying the decorator at the bottom
+2. Rename the strategy function and update the docstring
+3. Implement your strategy logic
+4. Register the strategy with a unique name using the @register_strategy decorator
 """
 import pandas as pd
 import numpy as np
 from typing import Dict, Any
 from core.config import BACKTEST_START, BACKTEST_END
 from core.strategies import register_strategy
-from core.strategies.base_strategy import StrategyTemplate
 
-class NewStrategy(StrategyTemplate):
+# Use a global variable to cache the results
+_GLOBAL_CACHE = {}
+
+@register_strategy("strategy_template")
+def strategy_template(df: pd.DataFrame) -> pd.Series:
     """
-    Description of your strategy goes here.
+    A simple template strategy that uses uniform weight allocation.
     
-    This should explain:
-    - The key idea behind your strategy
-    - What market conditions it works best in
-    - Any theoretical basis for the approach
-    - Expected performance characteristics
+    This basic strategy assigns equal weights to all trading days within each 4-year cycle.
+    It serves as a starting point for creating more sophisticated strategies.
     """
+    global _GLOBAL_CACHE
     
-    @staticmethod
-    def construct_features(df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Constructs additional features needed for the strategy.
-        
-        Args:
-            df (pd.DataFrame): Input price data with at least 'btc_close' column
-            
-        Returns:
-            pd.DataFrame: DataFrame with additional features
-            
-        Example:
-            # Calculate moving averages
-            df['ma_20'] = df['btc_close'].rolling(window=20).mean()
-            df['ma_50'] = df['btc_close'].rolling(window=50).mean()
-            
-            # Calculate relative price position
-            df['price_to_ma_ratio'] = df['btc_close'] / df['ma_50']
-            
-            # Calculate volatility
-            df['volatility'] = df['btc_close'].pct_change().rolling(window=20).std()
-        """
-        df = df.copy()
-        
-        # EXAMPLE FEATURE CALCULATIONS (uncomment and modify as needed):
-        # --------------------------------------------------------------
-        # 1. Moving averages
-        # df['ma_20'] = df['btc_close'].rolling(window=20).mean()
-        # df['ma_50'] = df['btc_close'].rolling(window=50).mean()
-        # df['ma_200'] = df['btc_close'].rolling(window=200).mean()
-        
-        # 2. Price relative to moving average
-        # df['price_to_ma_ratio'] = df['btc_close'] / df['ma_50']
-        # df['pct_from_ma'] = (df['btc_close'] / df['ma_50'] - 1) * 100
-        
-        # 3. Volatility measures
-        # df['volatility'] = df['btc_close'].pct_change().rolling(window=20).std()
-        
-        # 4. Momentum indicators
-        # df['momentum'] = df['btc_close'].pct_change(periods=14)
-        
-        # 5. Binary indicators
-        # df['below_ma'] = (df['btc_close'] < df['ma_50']).astype(int)
-        
-        return df
+    # Simple cache key based on dataframe shape and date range
+    cache_key = f"{df.shape[0]}_{df.index.min().strftime('%Y%m%d')}_{df.index.max().strftime('%Y%m%d')}"
     
-    @staticmethod
-    def compute_weights(df: pd.DataFrame) -> pd.Series:
-        """
-        Compute the weight allocation for each day in the dataframe.
+    # Return cached result if available
+    if cache_key in _GLOBAL_CACHE:
+        return _GLOBAL_CACHE[cache_key].copy()
+    
+    # Create a working copy of the dataframe
+    df_work = df.copy()
+    
+    # EXAMPLE FEATURE CALCULATIONS (uncomment and modify as needed):
+    # --------------------------------------------------------------
+    # 1. Moving averages
+    # df_work['ma_20'] = df_work['btc_close'].rolling(window=20, min_periods=1).mean()
+    # df_work['ma_50'] = df_work['btc_close'].rolling(window=50, min_periods=1).mean()
+    # df_work['ma_200'] = df_work['btc_close'].rolling(window=200, min_periods=1).mean()
+    
+    # 2. Price relative to moving average
+    # df_work['price_to_ma_ratio'] = df_work['btc_close'] / df_work['ma_50']
+    # df_work['pct_from_ma'] = (df_work['btc_close'] / df_work['ma_50'] - 1) * 100
+    
+    # 3. Volatility measures
+    # df_work['volatility'] = df_work['btc_close'].pct_change().rolling(window=20).std()
+    
+    # 4. Momentum indicators
+    # df_work['momentum'] = df_work['btc_close'].pct_change(periods=14)
+    
+    # 5. Binary indicators
+    # df_work['below_ma'] = (df_work['btc_close'] < df_work['ma_50']).astype(int)
+    
+    # Extract backtest period
+    df_backtest = df_work.loc[BACKTEST_START:BACKTEST_END]
+    
+    # Initialize weights Series
+    weights = pd.Series(index=df_backtest.index, dtype=float)
+    
+    # Group by cycle (4-year periods)
+    start_year = pd.to_datetime(BACKTEST_START).year
+    cycle_labels = df_backtest.index.to_series().apply(lambda dt: (dt.year - start_year) // 4)
+    
+    # EXAMPLE WEIGHTING STRATEGIES (uncomment and modify as needed):
+    # --------------------------------------------------------------
+    
+    # Process each cycle
+    for cycle, group in df_backtest.groupby(cycle_labels):
+        N = len(group)
         
-        Args:
-            df (pd.DataFrame): Input data with features
-            
-        Returns:
-            pd.Series: Series of weights indexed by date, ideally normalized
-            to sum to 1.0 within each 4-year cycle
-            
-        Notes:
-            - Weights should be positive (zero is allowed)
-            - The backtester will clip very small weights to zero
-            - The backtester will normalize to sum to 1.0 within cycles
-        """
-        df_backtest = df.loc[BACKTEST_START:BACKTEST_END]
-        weights = pd.Series(index=df_backtest.index, data=0.0)
-        
-        # EXAMPLE WEIGHTING STRATEGIES (uncomment and modify as needed):
-        # --------------------------------------------------------------
         # 1. Uniform weighting (baseline)
-        # weights = pd.Series(index=df_backtest.index, data=1.0)
+        temp_weights = np.full(N, 1.0 / N)
         
         # 2. Weight based on distance from moving average
-        # weights = 1.0 + 2.0 * (df_backtest['ma_50'] - df_backtest['btc_close']) / df_backtest['ma_50']
-        # weights = weights.clip(lower=0.1)  # Ensure minimum weight
+        # for i in range(N):
+        #     price = group['btc_close'].iloc[i]
+        #     ma_value = group['ma_50'].iloc[i]
+        #     if pd.notna(ma_value) and price < ma_value:
+        #         # Increase weight when price is below MA
+        #         temp_weights[i] *= 1.5
         
         # 3. Higher weights in bearish periods (below MA)
-        # weights[df_backtest['btc_close'] < df_backtest['ma_50']] = 2.0
-        # weights[df_backtest['btc_close'] >= df_backtest['ma_50']] = 0.5
+        # bearish_indices = group['btc_close'] < group['ma_50']
+        # temp_weights[bearish_indices] *= 2.0
         
-        # 4. Volatility-based weighting (more weight during low volatility)
-        # weights = 1.0 / df_backtest['volatility']
-        # weights = weights.fillna(0).replace([np.inf, -np.inf], 0)
+        # 4. Custom strategy logic - modify to implement your approach
+        # ...
         
-        # 5. Seasonal weighting
-        # weights = pd.Series(index=df_backtest.index, data=1.0)
-        # Q4_months = [10, 11, 12]
-        # weights[df_backtest.index.month.isin(Q4_months)] = 2.0  # Higher weight in Q4
+        # Ensure weights sum to 1.0 within the cycle
+        if sum(temp_weights) > 0:
+            temp_weights = temp_weights / sum(temp_weights)
         
-        # NORMALIZE WEIGHTS BY CYCLE - THIS IS REQUIRED
-        # ----------------------------------------------
-        # Group by 4-year cycles and normalize weights within each cycle
-        start_year = pd.to_datetime(BACKTEST_START).year
-        cycle_labels = df_backtest.index.to_series().apply(lambda dt: (dt.year - start_year) // 4)
-        
-        # Normalize weights so each cycle sums to 1.0
-        for cycle, group in weights.groupby(cycle_labels):
-            cycle_sum = group.sum()
-            if cycle_sum > 0:
-                weights.loc[group.index] = weights.loc[group.index] / cycle_sum
-        
-        return weights
-
-# UNCOMMENT AND MODIFY TO REGISTER YOUR STRATEGY
-# ---------------------------------------------
-# @register_strategy("my_strategy_name")
-# def my_strategy(df: pd.DataFrame) -> pd.Series:
-#     """
-#     Brief description of your strategy that will appear in --list output.
-#     """
-#     return NewStrategy.get_strategy_function()(df) 
+        # Assign weights for this cycle
+        weights.loc[group.index] = temp_weights
+    
+    # Cache the result
+    _GLOBAL_CACHE[cache_key] = weights.copy()
+    
+    return weights 
