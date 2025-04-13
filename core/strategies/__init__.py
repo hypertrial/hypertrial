@@ -84,4 +84,4 @@ def list_strategies() -> Dict[str, str]:
     """List all registered strategies with their docstrings"""
     return {name: func.__doc__ or "No description" for name, func in _strategies.items()}
 
-__version__ = "0.1.10"
+__version__ = "0.1.11"
