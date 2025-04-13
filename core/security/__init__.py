@@ -36,4 +36,4 @@ from core.security.utils import is_test_mode, validate_strategy_file
 from core.security.strategy_security import StrategySecurity
 secure_strategy = StrategySecurity.secure_strategy
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
