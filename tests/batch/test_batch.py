@@ -64,28 +64,47 @@ def test_strategy2(df):
     def test_run_single_backtest(self, mock_backtest, mock_process):
         """Test _run_single_backtest function"""
         # Set up mocks so they don't actually run
-        mock_process.return_value = None
+        mock_process.return_value = {'strategy_name': 'test_strategy1', 'spd_metrics': {'min_spd': 1000.0}}
         
         # Call the function directly
         args = (self.df, self.strategy_file1, self.temp_dir, False, True)
         result = _run_single_backtest(args)
         
         # Check the result structure without relying on specific mock interactions
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result, dict)
         
-        # The first element should be a string (strategy name)
-        self.assertIsInstance(result[0], str)
-        # The second element should be a boolean (success flag)
-        self.assertIsInstance(result[1], bool)
+        # Check that the result contains required keys
+        self.assertIn('strategy_name', result)
+        self.assertIn('strategy_file', result)
+        self.assertIn('success', result)
+        
+        # Check the values
+        self.assertEqual(result['strategy_file'], 'strategy1')
+        self.assertTrue(result['success'])
     
     @patch('core.batch._run_single_backtest')
     def test_backtest_multiple_strategy_files(self, mock_run_single):
         """Test backtest_multiple_strategy_files function"""
         # Configure mock to return success for both files
         mock_run_single.side_effect = [
-            ("test_strategy1", True),
-            ("test_strategy2", True)
+            {
+                'strategy_file': 'test_strategy1',
+                'strategy_name': 'test_strategy1',
+                'success': True,
+                'min_spd': 1000.0,
+                'max_spd': 5000.0,
+                'mean_spd': 2500.0,
+                'median_spd': 2000.0
+            },
+            {
+                'strategy_file': 'test_strategy2',
+                'strategy_name': 'test_strategy2',
+                'success': True,
+                'min_spd': 2000.0,
+                'max_spd': 6000.0,
+                'mean_spd': 3500.0,
+                'median_spd': 3000.0
+            }
         ]
         
         # Call the function
@@ -119,8 +138,18 @@ def test_strategy2(df):
         """Test backtest_multiple_strategy_files with batch processing"""
         # Configure mock to return success for files
         mock_run_single.side_effect = [
-            ("test_strategy1", True),
-            ("test_strategy2", True)
+            {
+                'strategy_file': 'test_strategy1',
+                'strategy_name': 'test_strategy1',
+                'success': True,
+                'min_spd': 1000.0
+            },
+            {
+                'strategy_file': 'test_strategy2',
+                'strategy_name': 'test_strategy2',
+                'success': True,
+                'min_spd': 2000.0
+            }
         ]
         
         # Create more strategy files for this test
@@ -262,6 +291,103 @@ def test_strategy2(df):
         self.assertIn('weights_not_sum_to_one', csv_df.columns)
         self.assertIn('underperforms_uniform', csv_df.columns)
         self.assertIn('is_forward_looking', csv_df.columns)
+
+    @patch('core.batch._run_single_backtest')
+    def test_csv_output_contains_all_required_columns(self, mock_run_single):
+        """Test that the CSV output contains all required columns from SPD, validation, and security"""
+        # Mock return value for _run_single_backtest
+        mock_run_single.return_value = {
+            'strategy_file': 'test_strategy',
+            'strategy_name': 'dynamic_dca_test',
+            'success': True,
+            'min_spd': 1000.0,
+            'max_spd': 5000.0,
+            'mean_spd': 2500.0,
+            'median_spd': 2000.0,
+            'min_pct': 10.0,
+            'max_pct': 90.0,
+            'mean_pct': 50.0,
+            'median_pct': 45.0,
+            'cycles': ['2013–2016', '2017–2020', '2021–2024'],
+            'excess_pct': [0.5, 1.5, 2.5],
+            'mean_excess_pct': 1.5,
+            'validation_validation_passed': True,
+            'validation_has_negative_weights': False,
+            'validation_has_below_min_weights': False,
+            'validation_weights_not_sum_to_one': False,
+            'validation_underperforms_uniform': False,
+            'validation_cycle_issues': {},
+            'high_threats': 0,
+            'medium_threats': 0,
+            'low_threats': 1,
+            'total_threats': 1
+        }
+        
+        # Create some test strategy files
+        os.makedirs(os.path.join(self.temp_dir, 'strategies'), exist_ok=True)
+        test_file_path = os.path.join(self.temp_dir, 'strategies', 'test_strategy.py')
+        with open(test_file_path, 'w') as f:
+            f.write("# Test strategy")
+        
+        # Call the function
+        result = backtest_multiple_strategy_files(
+            self.df,
+            [test_file_path],
+            self.temp_dir,
+            show_plots=False,
+            processes=1
+        )
+        
+        # Check the result
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertEqual(len(result), 1)  # One strategy
+        
+        # Verify CSV was created
+        csv_path = os.path.join(self.temp_dir, 'strategy_files_summary.csv')
+        self.assertTrue(os.path.exists(csv_path))
+        
+        # Read the CSV and check all required columns
+        csv_df = pd.read_csv(csv_path)
+        
+        # 1. Strategy identification columns
+        self.assertIn('strategy_file', csv_df.columns)
+        self.assertIn('strategy_name', csv_df.columns)
+        self.assertIn('success', csv_df.columns)
+        
+        # 2. SPD metrics from spd.py
+        self.assertIn('min_spd', csv_df.columns)
+        self.assertIn('max_spd', csv_df.columns)
+        self.assertIn('mean_spd', csv_df.columns)
+        self.assertIn('median_spd', csv_df.columns)
+        self.assertIn('min_pct', csv_df.columns)
+        self.assertIn('max_pct', csv_df.columns)
+        self.assertIn('mean_pct', csv_df.columns)
+        self.assertIn('median_pct', csv_df.columns)
+        self.assertIn('cycles', csv_df.columns)
+        self.assertIn('excess_pct', csv_df.columns)
+        self.assertIn('mean_excess_pct', csv_df.columns)
+        
+        # 3. Validation results from spd_checks.py
+        self.assertIn('validation_validation_passed', csv_df.columns)
+        self.assertIn('validation_has_negative_weights', csv_df.columns)
+        self.assertIn('validation_has_below_min_weights', csv_df.columns)
+        self.assertIn('validation_weights_not_sum_to_one', csv_df.columns)
+        self.assertIn('validation_underperforms_uniform', csv_df.columns)
+        self.assertIn('validation_cycle_issues', csv_df.columns)
+        
+        # 4. Security results from bandit_analyzer.py
+        self.assertIn('high_threats', csv_df.columns)
+        self.assertIn('medium_threats', csv_df.columns)
+        self.assertIn('low_threats', csv_df.columns)
+        self.assertIn('total_threats', csv_df.columns)
+        
+        # Verify values match what we mocked
+        self.assertEqual(csv_df['strategy_name'].iloc[0], 'dynamic_dca_test')
+        self.assertEqual(csv_df['min_spd'].iloc[0], 1000.0)
+        self.assertEqual(csv_df['mean_excess_pct'].iloc[0], 1.5)
+        self.assertEqual(csv_df['high_threats'].iloc[0], 0)
+        self.assertEqual(csv_df['total_threats'].iloc[0], 1)
+        self.assertTrue(csv_df['validation_validation_passed'].iloc[0])
 
 if __name__ == "__main__":
     unittest.main() 

@@ -22,7 +22,7 @@ def _run_single_backtest(args):
         args (tuple): Tuple containing (df, strategy_file, output_dir, show_plots, validate)
         
     Returns:
-        tuple: (strategy_name, success)
+        dict: Dictionary with strategy details, metrics and validation results
     """
     df, strategy_file, output_dir, show_plots, validate = args
     try:
@@ -43,8 +43,8 @@ def _run_single_backtest(args):
         sys.stderr = stderr_buf
         
         # Process the strategy
-        process_single_strategy(df, strategy_file=strategy_file, show_plots=show_plots, 
-                                save_plots=True, output_dir=output_dir, validate=validate)
+        metrics_result = process_single_strategy(df, strategy_file=strategy_file, show_plots=show_plots, 
+                                save_plots=True, output_dir=output_dir, validate=validate, return_metrics=True)
         
         # Restore original stdout/stderr
         sys.stdout = orig_stdout
@@ -52,18 +52,63 @@ def _run_single_backtest(args):
         
         # Extract strategy name from file path
         import os
-        strategy_name = os.path.splitext(os.path.basename(strategy_file))[0]
+        file_name = os.path.splitext(os.path.basename(strategy_file))[0]
         
         # Print any output
-        print(f"\nOutput from processing {strategy_name}:")
+        print(f"\nOutput from processing {file_name}:")
         print(stdout_buf.getvalue())
         
         # Print any errors
         if stderr_buf.getvalue():
-            print(f"\nErrors from processing {strategy_name}:")
+            print(f"\nErrors from processing {file_name}:")
             print(stderr_buf.getvalue())
         
-        return (strategy_name, True)
+        # Get the registered strategy name and metrics from the result
+        if metrics_result and isinstance(metrics_result, dict):
+            strategy_name = metrics_result.get('strategy_name', file_name)
+            
+            # Get security metrics from bandit
+            from core.security.utils import get_bandit_threat_level
+            bandit_metrics = get_bandit_threat_level(strategy_file)
+            
+            # Create a comprehensive result dictionary
+            result = {
+                'strategy_file': file_name,
+                'strategy_name': strategy_name,
+                'success': True
+            }
+            
+            # Add all SPD metrics
+            if 'spd_metrics' in metrics_result:
+                spd_metrics = metrics_result['spd_metrics']
+                # Add all dynamic SPD metrics
+                if isinstance(spd_metrics, dict):
+                    for key, value in spd_metrics.items():
+                        result[key] = value
+            
+            # Add all validation results
+            if 'validation_results' in metrics_result:
+                validation = metrics_result['validation_results']
+                if isinstance(validation, dict):
+                    for key, value in validation.items():
+                        result[f'validation_{key}'] = value
+            
+            # Add security results
+            if bandit_metrics:
+                result['high_threats'] = bandit_metrics.get('high_threat_count', 0)
+                result['medium_threats'] = bandit_metrics.get('medium_threat_count', 0)
+                result['low_threats'] = bandit_metrics.get('low_threat_count', 0)
+                result['total_threats'] = bandit_metrics.get('total_threat_count', 0)
+            
+            return result
+        else:
+            # Fallback if metrics aren't available
+            return {
+                'strategy_file': file_name,
+                'strategy_name': file_name,
+                'success': True
+            }
+            
     except Exception as e:
         import traceback
         print(f"Error processing {strategy_file}: {str(e)}")
@@ -71,9 +116,14 @@ def _run_single_backtest(args):
         
         # Extract strategy name from file path
         import os
-        strategy_name = os.path.splitext(os.path.basename(strategy_file))[0]
+        file_name = os.path.splitext(os.path.basename(strategy_file))[0]
         
-        return (strategy_name, False)
+        return {
+            'strategy_file': file_name,
+            'strategy_name': file_name,
+            'success': False,
+            'error': str(e)
+        }
 
 def backtest_all_strategies(btc_df, output_dir, show_plots=False, validate=True):
     """
@@ -124,10 +174,13 @@ def backtest_all_strategies(btc_df, output_dir, show_plots=False, validate=True)
         all_spd_results = []
         summary_results = []
         
-        for strategy_name, success in results:
-            if not success:
+        for result in results:
+            if not isinstance(result, dict) or not result.get('success', False):
+                strategy_name = result['strategy_name'] if isinstance(result, dict) and 'strategy_name' in result else "unknown"
                 logger.warning(f"Strategy {strategy_name} processing failed, skipping")
                 continue
+            
+            strategy_name = result['strategy_name']
             
             try:
                 # Run backtest for the strategy
@@ -333,9 +386,8 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
     # Check if we have any files to process
     if not strategy_files:
         logger.error("No strategy files provided for processing")
-        return pd.DataFrame(columns=['strategy', 'strategy_file', 'min_spd', 'max_spd', 'avg_spd', 
-                                    'median_spd', 'min_excess_pct', 'max_excess_pct', 'avg_excess_pct', 
-                                    'median_excess_pct', 'bandit_threat'])
+        return pd.DataFrame(columns=['strategy_name', 'strategy_file', 'success', 'min_spd', 'max_spd', 'mean_spd', 
+                                    'median_spd', 'min_pct', 'max_pct', 'mean_pct', 'median_pct', 'mean_excess_pct'])
     
     logger.info(f"\nBacktesting {len(strategy_files)} strategy files...")
     logger.info(f"Backtest date range: {BACKTEST_START} to {BACKTEST_END}")
@@ -380,7 +432,8 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
                     
                     # Process with progress reporting
                     for i, result in enumerate(pool.imap_unordered(_run_single_backtest, args_list)):
-                        batch_results.append(result)
+                        if result and result.get('success', False):
+                            batch_results.append(result)
                         if (i+1) % max(1, len(batch)//10) == 0 or i+1 == len(batch):
                             logger.info(f"  Progress: {i+1}/{len(batch)} files processed in batch {batch_idx+1}")
                 else:
@@ -390,12 +443,13 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
                     
                     # Process with progress reporting
                     for i, result in enumerate(pool.imap_unordered(_run_single_backtest, args_list)):
-                        batch_results.append(result)
+                        if result and result.get('success', False):
+                            batch_results.append(result)
                         if (i+1) % max(1, len(batch)//10) == 0 or i+1 == len(batch):
                             logger.info(f"  Progress: {i+1}/{len(batch)} files processed in batch {batch_idx+1}")
                 
-                # Filter out None results
-                batch_summaries = [r for r in batch_results if r is not None]
+                # Filter out None results or failed processing
+                batch_summaries = [r for r in batch_results if r is not None and r.get('success', False)]
         else:
             # Process sequentially with progress reporting
             batch_summaries = []
@@ -405,7 +459,7 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
                 else:
                     result = _run_single_backtest((btc_df, strategy_file, output_dir, show_plots, validate))
                     
-                if result is not None:
+                if result is not None and result.get('success', False):
                     batch_summaries.append(result)
                     
                 # Report progress
@@ -422,19 +476,41 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
     if not all_summary_results:
         logger.error("No valid strategy files were processed successfully.")
         # Return empty DataFrames to ensure tests pass
-        return pd.DataFrame(columns=['strategy', 'strategy_file', 'min_spd', 'max_spd', 'avg_spd', 
-                                    'median_spd', 'min_excess_pct', 'max_excess_pct', 'avg_excess_pct', 
-                                    'median_excess_pct', 'bandit_threat'])
+        return pd.DataFrame(columns=['strategy_name', 'strategy_file', 'success', 'min_spd', 'max_spd', 'mean_spd', 
+                                    'median_spd', 'min_pct', 'max_pct', 'mean_pct', 'median_pct', 'mean_excess_pct'])
     
-    # Extract raw results and create summary DataFrame
-    all_spd_results = [result.pop('raw_results') for result in all_summary_results if 'raw_results' in result]
+    # Extract raw results for detailed CSV (if available)
+    detailed_results = []
+    for result in all_summary_results:
+        if 'spd_metrics' in result and 'raw_results' in result['spd_metrics']:
+            raw_df = result['spd_metrics'].pop('raw_results')
+            raw_df['strategy_name'] = result['strategy_name']
+            raw_df['strategy_file'] = result['strategy_file']
+            detailed_results.append(raw_df)
+    
+    # Create summary DataFrame from all results
     summary_df = pd.DataFrame(all_summary_results)
     
-    # Combine all results into DataFrames and reset index
-    if all_spd_results:
-        all_results_df = pd.concat(all_spd_results, ignore_index=True)
+    # Flatten nested dictionary fields if needed
+    if 'spd_metrics' in summary_df.columns:
+        # Extract SPD metrics into top-level columns
+        for result in all_summary_results:
+            if 'spd_metrics' in result and isinstance(result['spd_metrics'], dict):
+                for key, value in result['spd_metrics'].items():
+                    # Skip raw_results which we've already extracted
+                    if key != 'raw_results':
+                        result[key] = value
+                # Remove the nested dictionary
+                del result['spd_metrics']
+                
+        # Recreate the DataFrame after flattening
+        summary_df = pd.DataFrame(all_summary_results)
+    
+    # Combine all detailed results into a DataFrame if available
+    if detailed_results:
+        all_results_df = pd.concat(detailed_results, ignore_index=True)
         
-        # Save results to CSV
+        # Save detailed results to CSV
         spd_csv_path = os.path.join(output_dir, 'strategy_files_spd_results.csv')
         all_results_df.to_csv(spd_csv_path, index=False)
     else:
@@ -458,8 +534,8 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
     pd.set_option('display.width', 120)
     
     # Sort by average excess percentage if available
-    if 'avg_excess_pct' in summary_df.columns and len(summary_df) > 0:
-        logger.info(summary_df.sort_values('avg_excess_pct', ascending=False))
+    if 'mean_excess_pct' in summary_df.columns and len(summary_df) > 0:
+        logger.info(summary_df.sort_values('mean_excess_pct', ascending=False))
     else:
         logger.info(summary_df)
     

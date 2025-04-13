@@ -43,12 +43,22 @@ The test suite includes the following test files:
 - `security/test_security.py`: Main security tests for strategy validation and sandboxing
 - `security/test_bandit_security.py`: Tests for Bandit security analysis on submitted strategies
 - `security/test_security_module.py`: Tests for the security module components and functionality
+- `security/test_ast_operations.py`: Tests for the abstract syntax tree (AST) parsing and analysis operations
+- `security/test_backward_compatibility.py`: Tests for ensuring backward compatibility with previous security measures
+- `security/test_data_flow.py`: Tests for data flow validation and protection against data leakage
+- `security/test_data_flow_more_coverage.py`: Additional tests for data flow security features
+- `security/test_import_hook.py`: Tests for the custom import hook used for security sandboxing
+- `security/test_resource_monitor.py`: Tests for the resource monitoring and limitation components
+- `security/test_strategy_security.py`: Tests for specific security checks on strategy files
+- `security/test_validate_external_data.py`: Tests for validating and securing external data sources
 
 ### Data Tests
 
 - `data/test_data_basic.py`: Tests for basic data loading and validation
 - `data/test_data_download.py`: Tests for data downloading functionality
 - `data/test_data_download_integration.py`: Tests data integration with real-world sources
+- `data/test_data_init.py`: Tests for data module initialization and setup
+- `data/test_extract_data_more_coverage.py`: Additional tests for data extraction and processing
 - `core_modules/data/test_data_formats.py`: Tests data format validation and conversion
 - `core_modules/data/test_data_validation.py`: Tests data validation rules and constraints
 
@@ -69,6 +79,7 @@ The following tests ensure comprehensive coverage of core functionality:
 - `core_modules/test_config.py`: Tests configuration constants and their constraints
 - `batch/test_batch.py`: Tests batch processing of strategies and parallel execution
 - `batch/test_batch_advanced.py`: Tests advanced batch processing capabilities and edge cases
+- `batch/test_batch_more_coverage.py`: Tests additional batch processing scenarios and edge cases
 - `core_modules/error/test_error_handling.py`: Tests error handling and graceful failure modes
 
 ### Strategy Tests
@@ -661,9 +672,17 @@ The test suite is organized into the following directory structure:
 
 - `tests/`: Root directory containing main configuration and common fixtures
   - `security/`: Security-related tests
-    - `test_security.py`: Main security tests for strategy validation and sandboxing
+    - `test_security.py`: Main security tests
     - `test_bandit_security.py`: Bandit security analysis tests
     - `test_security_module.py`: Security module component tests
+    - `test_ast_operations.py`: AST operations tests
+    - `test_backward_compatibility.py`: Security backward compatibility tests
+    - `test_data_flow.py`: Data flow validation tests
+    - `test_data_flow_more_coverage.py`: Extended data flow security tests
+    - `test_import_hook.py`: Import hook security tests
+    - `test_resource_monitor.py`: Resource monitoring tests
+    - `test_strategy_security.py`: Strategy security tests
+    - `test_validate_external_data.py`: External data validation tests
   - `strategies/`: Strategy-related tests
     - `test_strategy_file.py`: Standalone strategy file tests
     - `test_strategy_files.py`: Multiple strategy files loading tests
@@ -679,10 +698,13 @@ The test suite is organized into the following directory structure:
   - `batch/`: Batch processing tests
     - `test_batch.py`: Basic batch processing tests
     - `test_batch_advanced.py`: Advanced batch processing tests
+    - `test_batch_more_coverage.py`: Additional batch processing coverage tests
   - `data/`: Data handling tests
     - `test_data_basic.py`: Basic data loading tests
     - `test_data_download.py`: Data downloading tests
     - `test_data_download_integration.py`: Data integration tests
+    - `test_data_init.py`: Data initialization tests
+    - `test_extract_data_more_coverage.py`: Extended data extraction tests
   - `package/`: Package management tests
     - `test_installation.py`: Installation tests
     - `test_setup.py`: Setup tests

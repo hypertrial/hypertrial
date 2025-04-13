@@ -13,7 +13,7 @@ from core.strategy_loader import load_strategy_from_file, find_strategy_class
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show_plots=True, save_plots=False, output_dir='results', standalone=False, validate=True):
+def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show_plots=True, save_plots=False, output_dir='results', standalone=False, validate=True, return_metrics=False):
     """
     Process a single strategy - either from name or file.
     
@@ -26,15 +26,20 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         output_dir (str): Directory to save results
         standalone (bool): Whether to run in standalone mode
         validate (bool): Whether to validate strategy against submission criteria (True by default)
+        return_metrics (bool): Whether to return a dictionary of metrics (False by default)
+        
+    Returns:
+        dict: Dictionary of metrics if return_metrics is True, None otherwise
     """
     strategy_fn = None
     strategy_class = None
+    metrics_result = {}
     
     # Load strategy from file if provided
     if strategy_file:
         strategy_name, strategy_fn, strategy_class = load_strategy_from_file(strategy_file)
         if not strategy_fn:
-            return  # Error already logged
+            return None if return_metrics else None  # Error already logged
     # Otherwise, load registered strategy by name
     else:
         try:
@@ -47,7 +52,7 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
             logger.error("Available strategies:")
             for name in core.strategies.list_strategies():
                 logger.error(f" - {name}")
-            return
+            return None if return_metrics else None
     
     # Prepare features for visualization
     if strategy_class:
@@ -60,14 +65,42 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
     # Compute weights using the strategy function with security checks
     weights = strategy_fn(btc_df)
 
+    # Store registered strategy name for metrics
+    if return_metrics:
+        metrics_result['strategy_name'] = strategy_name
+
     # Run validation checks if requested
+    validation_results = None
     if validate:
         logger.info(f"Validating strategy '{strategy_name}' against submission criteria...")
-        is_valid = check_strategy_submission_ready(btc_df, strategy_name)
+        validation_results = check_strategy_submission_ready(btc_df, strategy_name, return_details=True)
+        
+        # Handle both bool and dict return values from check_strategy_submission_ready
+        if isinstance(validation_results, dict):
+            is_valid = validation_results.get('validation_passed', False)
+        else:
+            # If it returned a bool directly (older versions), use that
+            is_valid = bool(validation_results)
+            
+            # Create a minimal validation dict for return_metrics case
+            if return_metrics:
+                validation_results = {
+                    'validation_passed': is_valid,
+                    'has_negative_weights': False,
+                    'has_below_min_weights': False,
+                    'weights_not_sum_to_one': False,
+                    'underperforms_uniform': False,
+                    'cycle_issues': {}
+                }
+        
         if not is_valid:
             logger.warning(f"Strategy '{strategy_name}' validation failed")
         else:
             logger.info(f"Strategy '{strategy_name}' passed all validation checks")
+        
+        # Store validation results for metrics
+        if return_metrics:
+            metrics_result['validation_results'] = validation_results
 
     # Plot results only if not disabled
     from core.plots import print_weight_sums_by_cycle  # Import here to be used in both cases
@@ -105,10 +138,37 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         
         print(f"\nMean Excess Percentile: {result['mean_excess_pct']:.2f}%")
         
+        # Store metrics for return
+        if return_metrics:
+            metrics_result['spd_metrics'] = result
+        
         # Generate plots if not disabled
         if show_plots:
             standalone_plot_comparison(btc_df, weights, strategy_name=strategy_name,
                                        save_to_file=save_plots, output_dir=output_dir)
     else:
         # Regular mode: run comparison against uniform DCA
-        backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=show_plots) 
+        spd_results = backtest_dynamic_dca(btc_df, strategy_name=strategy_name, show_plots=show_plots) 
+        
+        # Store metrics for return
+        if return_metrics:
+            # Extract key metrics from backtest results
+            spd_metrics = {
+                'min_spd': spd_results['dynamic_spd'].min(),
+                'max_spd': spd_results['dynamic_spd'].max(),
+                'mean_spd': spd_results['dynamic_spd'].mean(),
+                'median_spd': spd_results['dynamic_spd'].median(),
+                'min_pct': spd_results['dynamic_pct'].min(),
+                'max_pct': spd_results['dynamic_pct'].max(),
+                'mean_pct': spd_results['dynamic_pct'].mean(),
+                'median_pct': spd_results['dynamic_pct'].median(),
+                'cycles': list(spd_results.index),
+                'excess_pct': spd_results['excess_pct'].tolist(),
+                'mean_excess_pct': spd_results['excess_pct'].mean(),
+                'raw_results': spd_results  # Include full results
+            }
+            metrics_result['spd_metrics'] = spd_metrics
+    
+    # Return metrics if requested
+    if return_metrics:
+        return metrics_result 

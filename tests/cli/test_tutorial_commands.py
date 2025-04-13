@@ -310,6 +310,80 @@ class TestTutorialCommandsExecution(unittest.TestCase):
         except:
             # Registration might not work in some test environments, so we'll tolerate failure
             pass
+    
+    def test_csv_output_columns(self):
+        """Test that the CSV output contains all required columns when running CLI commands."""
+        # Create a dedicated temp directory for this test
+        temp_output_dir = os.path.join(self.output_dir, "csv_test")
+        os.makedirs(temp_output_dir, exist_ok=True)
+        
+        # Run command that generates CSV output
+        result = self._run_command([
+            "--strategy-dir", self.tutorials_dir,
+            "--recursive",
+            "--no-plots",
+            "--output-dir", temp_output_dir
+        ])
+        
+        # Verify CSV was created
+        csv_path = os.path.join(temp_output_dir, 'strategy_files_summary.csv')
+        self.assertTrue(os.path.exists(csv_path), f"CSV file not created at {csv_path}")
+        
+        # Read the CSV and check all required columns
+        csv_df = pd.read_csv(csv_path)
+        
+        # Verify at least one strategy was processed
+        self.assertGreater(len(csv_df), 0, "No strategies were processed in the CSV")
+        
+        # Check each column group
+        # 1. Strategy identification columns
+        self.assertIn('strategy_file', csv_df.columns)
+        self.assertIn('strategy_name', csv_df.columns)
+        self.assertIn('success', csv_df.columns)
+        
+        # 2. SPD metrics from spd.py
+        spd_metrics = [
+            'min_spd', 'max_spd', 'mean_spd', 'median_spd',
+            'min_pct', 'max_pct', 'mean_pct', 'median_pct',
+            'cycles', 'excess_pct', 'mean_excess_pct'
+        ]
+        for metric in spd_metrics:
+            self.assertIn(metric, csv_df.columns, f"Missing SPD metric: {metric}")
+        
+        # 3. Validation results from spd_checks.py
+        validation_columns = [
+            'validation_validation_passed',
+            'validation_has_negative_weights',
+            'validation_has_below_min_weights',
+            'validation_weights_not_sum_to_one',
+            'validation_underperforms_uniform',
+            'validation_cycle_issues'
+        ]
+        for col in validation_columns:
+            self.assertIn(col, csv_df.columns, f"Missing validation column: {col}")
+        
+        # 4. Security results from bandit_analyzer.py
+        security_columns = [
+            'high_threats', 'medium_threats', 'low_threats', 'total_threats'
+        ]
+        for col in security_columns:
+            self.assertIn(col, csv_df.columns, f"Missing security column: {col}")
+        
+        # Verify the registered strategies are present
+        strategy_names = csv_df['strategy_name'].unique()
+        self.assertIn('dynamic_dca_200ma', strategy_names, "Missing dynamic_dca_200ma strategy") 
+        
+        # Verify example data matches expectations
+        for idx, row in csv_df.iterrows():
+            # Check that validation passed for our example strategies
+            self.assertTrue(row['validation_validation_passed'], 
+                           f"Validation failed for {row['strategy_name']}")
+            
+            # Check that security shows no threats for our example strategies
+            self.assertEqual(row['high_threats'], 0, 
+                            f"High threats found for {row['strategy_name']}")
+            self.assertEqual(row['medium_threats'], 0, 
+                            f"Medium threats found for {row['strategy_name']}")
 
 if __name__ == "__main__":
     unittest.main() 

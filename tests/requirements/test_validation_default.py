@@ -157,8 +157,12 @@ def test_backtest_multiple_files_validate_default(mock_run_backtest, sample_data
     with open(test_file, 'w') as f:
         f.write("def test_strategy(df): return df.index")
     
-    # Mock the run_single_backtest function
-    mock_run_backtest.return_value = ('test_strategy', True)
+    # Mock the run_single_backtest function to return a dictionary instead of a tuple
+    mock_run_backtest.return_value = {
+        'strategy_name': 'test_strategy',
+        'strategy_file': 'test_strategy.py',
+        'success': True
+    }
     
     # Call function without specifying validate (should default to True)
     backtest_multiple_strategy_files(sample_data, [test_file], str(tmp_path), show_plots=False)
@@ -176,8 +180,12 @@ def test_backtest_multiple_files_no_validate(mock_run_backtest, sample_data, tmp
     with open(test_file, 'w') as f:
         f.write("def test_strategy(df): return df.index")
     
-    # Mock the run_single_backtest function
-    mock_run_backtest.return_value = ('test_strategy', True)
+    # Mock the run_single_backtest function to return a dictionary instead of a tuple
+    mock_run_backtest.return_value = {
+        'strategy_name': 'test_strategy',
+        'strategy_file': 'test_strategy.py', 
+        'success': True
+    }
     
     # Call function with validate=False
     backtest_multiple_strategy_files(sample_data, [test_file], str(tmp_path), 
