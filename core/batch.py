@@ -75,7 +75,12 @@ def _run_single_backtest(args):
             result = {
                 'strategy_file': file_name,
                 'strategy_name': strategy_name,
-                'success': True
+                'success': True,
+                # Initialize security metrics with default values of 0
+                'high_threats': 0,
+                'medium_threats': 0,
+                'low_threats': 0,
+                'total_threats': 0
             }
             
             # Add all SPD metrics
@@ -99,7 +104,7 @@ def _run_single_backtest(args):
                         else:
                             result[f'validation_{key}'] = value
             
-            # Add security results
+            # Add security results if available (overwriting defaults)
             if bandit_metrics:
                 result['high_threats'] = bandit_metrics.get('high_threat_count', 0)
                 result['medium_threats'] = bandit_metrics.get('medium_threat_count', 0)
@@ -112,7 +117,12 @@ def _run_single_backtest(args):
             return {
                 'strategy_file': file_name,
                 'strategy_name': file_name,
-                'success': True
+                'success': True,
+                # Initialize security metrics with default values of 0
+                'high_threats': 0,
+                'medium_threats': 0,
+                'low_threats': 0,
+                'total_threats': 0
             }
             
     except Exception as e:
@@ -128,7 +138,12 @@ def _run_single_backtest(args):
             'strategy_file': file_name,
             'strategy_name': file_name,
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            # Initialize security metrics with default values of 0
+            'high_threats': 0,
+            'medium_threats': 0,
+            'low_threats': 0,
+            'total_threats': 0
         }
 
 def backtest_all_strategies(btc_df, output_dir, show_plots=False, validate=True):
@@ -393,7 +408,7 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
     if not strategy_files:
         logger.error("No strategy files provided for processing")
         return pd.DataFrame(columns=['strategy_name', 'strategy_file', 'success', 'min_spd', 'max_spd', 'mean_spd', 
-                                    'median_spd', 'min_pct', 'max_pct', 'mean_pct', 'median_pct', 'mean_excess_pct'])
+                                    'median_spd', 'min_pct', 'max_pct', 'mean_pct', 'median_pct', 'cycles', 'excess_pct', 'mean_excess_pct'])
     
     logger.info(f"\nBacktesting {len(strategy_files)} strategy files...")
     logger.info(f"Backtest date range: {BACKTEST_START} to {BACKTEST_END}")
@@ -483,7 +498,7 @@ def backtest_multiple_strategy_files(btc_df, strategy_files, output_dir, show_pl
         logger.error("No valid strategy files were processed successfully.")
         # Return empty DataFrames to ensure tests pass
         return pd.DataFrame(columns=['strategy_name', 'strategy_file', 'success', 'min_spd', 'max_spd', 'mean_spd', 
-                                    'median_spd', 'min_pct', 'max_pct', 'mean_pct', 'median_pct', 'mean_excess_pct'])
+                                    'median_spd', 'min_pct', 'max_pct', 'mean_pct', 'median_pct', 'cycles', 'excess_pct', 'mean_excess_pct'])
     
     # Extract raw results for detailed CSV (if available)
     detailed_results = []
