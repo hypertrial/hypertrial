@@ -100,13 +100,14 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         else:
             logger.debug(f"Strategy '{strategy_name}' passed all validation checks")
             
-        # Print a single clean validation message
-        if is_valid:
-            print("\n✅ Strategy passed all validation checks.")
-        
         # Store validation results for metrics
         if return_metrics:
             metrics_result['validation_results'] = validation_results
+            # Store validation flag for printing later
+            metrics_result['is_valid'] = is_valid
+        else:
+            # Store validation flag for printing later
+            is_valid_strategy = is_valid
 
     # Plot results only if not disabled
     from core.plots import print_weight_sums_by_cycle  # Import here to be used in both cases
@@ -182,6 +183,9 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
     if return_metrics:
         return metrics_result 
     
+    # Print validation message at the end if validation was performed and passed
+    if validate and (('is_valid' in metrics_result and metrics_result['is_valid']) or ('is_valid_strategy' in locals() and is_valid_strategy)):
+        print("\n✅ Strategy passed all validation checks.")
+    
     # Print a clean completion message
-    print(f"\n✅ Strategy processing complete.")
     return None 
