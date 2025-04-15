@@ -106,4 +106,4 @@ def get_strategy_info(name: str) -> Dict[str, Any]:
         'function': strategy.__name__
     }
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
