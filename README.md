@@ -361,7 +361,7 @@ Security configuration is defined in `core/security/config.py` and is not custom
 
 ## Resources
 
-- **GitHub Repository**: https://github.com/mattfaltyn/hypertrial
+- **GitHub Repository**: https://github.com/hypertrial/hypertrial
 - **PyPI Package**: https://pypi.org/project/hypertrial/
 - **Documentation**: Available in the repository's tutorials directory
 - **Issue Tracker**: Submit issues on GitHub
