@@ -29,7 +29,7 @@ def load_strategy_from_file(strategy_path):
         logger.error(f"Strategy file not found: {strategy_path}")
         return None, None, None
     
-    # Validate the strategy file for security
+    # Validate the strategy file for security - this handles all security logging
     validate_strategy_file(strategy_path)
         
     try:
@@ -152,7 +152,7 @@ def process_strategy_file(args):
         return None
         
     try:
-        # Validate the strategy file for security
+        # Validate the strategy file for security - this handles all security logging internally
         validate_strategy_file(strategy_path)
         
         # Generate a strategy name from the file name

@@ -299,7 +299,7 @@ def test_plot_spd_comparison(sample_spd_results):
         mock_subplots.assert_called()
         
         # Verify basic plot setup
-        mock_ax1.set_title.assert_called_with("Uniform vs test_strategy DCA (SPD)")
+        mock_ax1.set_title.assert_called_with("Strategy Performance: test_strategy")
         mock_ax1.set_ylabel.assert_called_with('Sats per Dollar (Log Scale)')
         mock_ax1.set_xlabel.assert_called_with("Cycle")
         mock_ax1.grid.assert_called_with(True, linestyle='--', linewidth=0.5)

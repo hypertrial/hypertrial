@@ -18,7 +18,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Hypertrial Backtesting Framework')
     parser.add_argument(
         '--strategy', '-s', 
-        default='dynamic_dca',
+        default='uniform_dca',
         help='Strategy to use for backtesting'
     )
     parser.add_argument(

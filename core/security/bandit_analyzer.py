@@ -96,16 +96,13 @@ class BanditAnalyzer:
                     medium_severity_issues = self._get_medium_severity_issues()
                     low_severity_issues = self._get_low_severity_issues()
                     
-                    # Log summary information
-                    severity_summary = f"Bandit found: {len(high_severity_issues)} high, " \
-                                     f"{len(medium_severity_issues)} medium, " \
-                                     f"{len(low_severity_issues)} low severity issues"
-                    logger.info(severity_summary)
-                    
-                    # Log low severity issues as warnings
-                    if low_severity_issues:
-                        for issue in low_severity_issues:
-                            logger.warning(f"Low severity issue: {issue['issue_text']} ({issue['issue_id']}) at line {issue['line_number']}")
+                    # Only log summary information (don't log "Bandit found" message as it's redundant with utils.py)
+                    total_issues = len(high_severity_issues) + len(medium_severity_issues) + len(low_severity_issues)
+                    if total_issues > 0:
+                        # Log low severity issues as warnings only
+                        if low_severity_issues:
+                            for issue in low_severity_issues:
+                                logger.warning(f"Low severity issue: {issue['issue_text']} ({issue['issue_id']}) at line {issue['line_number']}")
                     
                     # Block strategies with high or medium severity issues
                     if high_severity_issues:

@@ -91,10 +91,8 @@ def validate_strategy_file(file_path: str) -> None:
         
         if bandit_success:
             bandit_summary = bandit_analyzer.get_summary()
-            logger.info(f"Bandit security scan: {bandit_summary['issues_count']} issues found "
-                      f"(High: {bandit_summary['high_severity_count']}, "
-                      f"Medium: {bandit_summary['medium_severity_count']}, "
-                      f"Low: {bandit_summary['low_severity_count']})")
+            # Format the security scan message with clear, consistent formatting
+            logger.info(f"Bandit security scan: {bandit_summary['issues_count']} issues found (High: {bandit_summary['high_severity_count']}, Medium: {bandit_summary['medium_severity_count']}, Low: {bandit_summary['low_severity_count']})")
         else:
             logger.warning("Bandit security analysis was skipped - continuing with other checks")
         
@@ -228,6 +226,7 @@ def validate_strategy_file(file_path: str) -> None:
             if re.search(pattern, code):
                 raise SecurityError(f"Dangerous pattern detected: {pattern}")
         
+        # Clear spacing and more visible success message
         logger.info(f"Strategy file {file_path} passed security validation")
         
     except Exception as e:

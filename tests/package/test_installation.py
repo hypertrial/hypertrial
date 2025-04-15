@@ -61,7 +61,6 @@ class TestCommandLine(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn('uniform_dca', result.stdout)
-        self.assertIn('dynamic_dca', result.stdout)
 
 
 class TestDependencies(unittest.TestCase):

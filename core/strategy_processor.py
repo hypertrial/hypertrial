@@ -93,10 +93,16 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
                     'cycle_issues': {}
                 }
         
+        # Note: Don't print validation result here - it's already done in check_strategy_submission_ready
+        # Just log the final status at debug level for diagnostic purposes
         if not is_valid:
-            logger.warning(f"Strategy '{strategy_name}' validation failed")
+            logger.debug(f"Strategy '{strategy_name}' validation failed")
         else:
-            logger.info(f"Strategy '{strategy_name}' passed all validation checks")
+            logger.debug(f"Strategy '{strategy_name}' passed all validation checks")
+            
+        # Print a single clean validation message
+        if is_valid:
+            print("\n✅ Strategy passed all validation checks.")
         
         # Store validation results for metrics
         if return_metrics:
@@ -139,12 +145,6 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
         print(f"  mean: {result['mean_spd']:.2f}")
         print(f"  median: {result['median_spd']:.2f}")
         
-        print("\nExcess SPD Percentile Difference (Dynamic - Uniform) per Cycle:")
-        for cycle, excess_pct in result['excess_pct_by_cycle'].items():
-            print(f"  {cycle}: {excess_pct:.2f}%")
-        
-        print(f"\nMean Excess Percentile: {result['mean_excess_pct']:.2f}%")
-        
         # Store metrics for return
         if return_metrics:
             metrics_result['spd_metrics'] = result
@@ -181,3 +181,7 @@ def process_single_strategy(btc_df, strategy_name=None, strategy_file=None, show
     # Return metrics if requested
     if return_metrics:
         return metrics_result 
+    
+    # Print a clean completion message
+    print(f"\n✅ Strategy processing complete.")
+    return None 

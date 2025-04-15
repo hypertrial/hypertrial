@@ -130,7 +130,7 @@ class TestInstalledPackage(unittest.TestCase):
         else:
             strategy_names = strategies
             
-        expected_strategies = ['uniform_dca', 'dynamic_dca']
+        expected_strategies = ['uniform_dca']
         for strategy in expected_strategies:
             with self.subTest(strategy=strategy):
                 self.assertTrue(any(strategy in s for s in strategy_names), 

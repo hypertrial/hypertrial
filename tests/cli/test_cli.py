@@ -51,7 +51,6 @@ class TestCommandLineInterface(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn('uniform_dca', result.stdout)
-        self.assertIn('dynamic_dca', result.stdout)
         
     def test_module_run(self):
         """Test that the module can be run directly with Python."""

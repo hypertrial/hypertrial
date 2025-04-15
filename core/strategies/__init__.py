@@ -84,4 +84,26 @@ def list_strategies() -> Dict[str, str]:
     """List all registered strategies with their docstrings"""
     return {name: func.__doc__ or "No description" for name, func in _strategies.items()}
 
+def get_strategy_info(name: str) -> Dict[str, Any]:
+    """
+    Get information about a registered strategy, including its module path
+    
+    Args:
+        name: Name of the registered strategy
+        
+    Returns:
+        Dictionary with strategy information including module path
+    """
+    if name not in _strategies:
+        return None
+    
+    strategy = _strategies[name]
+    module = strategy.__module__
+    
+    return {
+        'name': name,
+        'module': module,
+        'function': strategy.__name__
+    }
+
 __version__ = "0.1.12"

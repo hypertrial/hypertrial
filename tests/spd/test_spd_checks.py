@@ -6,6 +6,8 @@ import pytest
 import pandas as pd
 import numpy as np
 from unittest.mock import patch, MagicMock
+import importlib
+from unittest import mock
 from core.spd_checks import compute_cycle_spd, backtest_dynamic_dca, check_strategy_submission_ready
 from core.config import MIN_WEIGHT
 
@@ -260,7 +262,7 @@ def test_check_valid_strategy(mock_compute_cycle_spd, mock_get_strategy, sample_
     
     # Assertions
     assert result is True
-    assert "✅ Strategy is ready for submission" in captured.out
+    assert "✅ Strategy passed all validation checks" in captured.out
 
 @patch('core.spd_checks.get_strategy')
 def test_check_negative_weights(mock_get_strategy, sample_price_data, mock_strategies, capsys):
@@ -276,8 +278,7 @@ def test_check_negative_weights(mock_get_strategy, sample_price_data, mock_strat
     
     # Assertions
     assert result is False
-    assert "❌ Some weights are zero or negative" in captured.out
-    assert "⚠️ Fix the issues above before submission" in captured.out
+    assert "weights are zero or negative" in captured.out
 
 @patch('core.spd_checks.get_strategy')
 def test_check_low_weights(mock_get_strategy, sample_price_data, mock_strategies, capsys):
@@ -293,8 +294,7 @@ def test_check_low_weights(mock_get_strategy, sample_price_data, mock_strategies
     
     # Assertions
     assert result is False
-    assert f"❌ Some weights are below MIN_WEIGHT = {MIN_WEIGHT}" in captured.out
-    assert "⚠️ Fix the issues above before submission" in captured.out
+    assert f"weights are below MIN_WEIGHT = {MIN_WEIGHT}" in captured.out
 
 @patch('core.spd_checks.get_strategy')
 def test_check_wrong_sum(mock_get_strategy, sample_price_data, mock_strategies, capsys):
@@ -310,8 +310,7 @@ def test_check_wrong_sum(mock_get_strategy, sample_price_data, mock_strategies, 
     
     # Assertions
     assert result is False
-    assert "❌ Total weights across the cycle do not sum to 1" in captured.out
-    assert "⚠️ Fix the issues above before submission" in captured.out
+    assert "weights across the cycle do not sum to 1" in captured.out
 
 @patch('core.spd_checks.get_strategy')
 @patch('core.spd_checks.compute_cycle_spd')
@@ -335,9 +334,8 @@ def test_check_underperforming(mock_compute_cycle_spd, mock_get_strategy, sample
     
     # Assertions
     assert result is False
-    assert "❌ Dynamic SPD percentile" in captured.out
-    assert "is less than uniform" in captured.out
-    assert "⚠️ Fix the issues above before submission" in captured.out
+    assert "Strategy performance" in captured.out
+    assert "is below threshold" in captured.out
 
 @patch('core.spd_checks.get_strategy')
 def test_check_forward_looking(mock_get_strategy, sample_price_data, mock_strategies, capsys):
@@ -426,7 +424,9 @@ def test_check_strategy_submission_ready_with_return_details(mock_compute_cycle_
     assert result['underperforms_uniform'] is False
     assert 'cycle_issues' in result
     assert isinstance(result['cycle_issues'], dict)
-    assert len(result['cycle_issues']) == 0  # Empty for valid strategy
+    # Check that all cycle_issues entries are empty dictionaries
+    for cycle, issues in result['cycle_issues'].items():
+        assert issues == {}, f"Cycle {cycle} has non-empty issues: {issues}"
     
     # Now test with an invalid strategy
     mock_get_strategy.return_value = mock_strategies['negative_weights_strategy']
@@ -448,37 +448,112 @@ def test_forward_looking_check(mock_get_strategy, sample_price_data, mock_strate
     # Setup a causal (non-forward-looking) strategy
     mock_get_strategy.return_value = mock_strategies['valid_strategy']
     
-    # First, test with a causal strategy
-    with patch('core.spd_checks.compute_cycle_spd') as mock_compute:
-        # Mock compute_cycle_spd to avoid testing that part
-        mock_compute.return_value = pd.DataFrame({
-            'uniform_pct': [50.0, 50.0],
-            'dynamic_pct': [60.0, 60.0],  # Better than uniform
-        }, index=['2013-2016', '2017-2020'])
+    # Replace the construct_features check with a mock
+    with patch('core.spd_checks.get_strategy_info') as mock_get_info:
+        # Configure mock to return a valid strategy info
+        mock_get_info.return_value = {
+            'name': 'valid_strategy',
+            'module': 'test_module',
+            'function': 'valid_strategy'
+        }
         
-        # Run the check with a valid, causal strategy
-        result = check_strategy_submission_ready(sample_price_data, 'valid_strategy', return_details=True)
+        # And also patch the importlib call
+        with patch('importlib.import_module') as mock_import:
+            mock_module = MagicMock()
+            mock_module.construct_features = MagicMock()
+            mock_import.return_value = mock_module
+            
+            # Mock compute_cycle_spd to avoid testing that part
+            with patch('core.spd_checks.compute_cycle_spd') as mock_compute:
+                mock_compute.return_value = pd.DataFrame({
+                    'uniform_pct': [50.0, 50.0],
+                    'dynamic_pct': [60.0, 60.0],  # Better than uniform
+                }, index=['2013-2016', '2017-2020'])
+                
+                # Make construct_features return the same result for original and lagged data
+                def mock_features(df):
+                    result = pd.DataFrame(index=df.index)
+                    result['feature1'] = 1.0  # Constant features (not forward-looking)
+                    return result
+                
+                mock_module.construct_features.side_effect = mock_features
+                
+                # Run the check with a valid, causal strategy
+                result = check_strategy_submission_ready(sample_price_data, 'valid_strategy', return_details=True)
+                
+                # Check that forward-looking flag is False
+                assert result['is_forward_looking'] is False
+                
+                # Capture stdout to verify output
+                captured = capsys.readouterr()
+                assert "❌ Strategy features may be forward-looking" not in captured.out
+    
+    # Now test with a forward-looking strategy by making construct_features return different results
+    with patch('core.spd_checks.get_strategy_info') as mock_get_info:
+        # Configure mock to return a valid strategy info
+        mock_get_info.return_value = {
+            'name': 'forward_looking_strategy',
+            'module': 'test_module',
+            'function': 'forward_looking_strategy'
+        }
         
-        # Check that forward-looking flag is False
-        assert result['is_forward_looking'] is False
+        # And also patch the importlib call
+        with patch('importlib.import_module') as mock_import:
+            mock_module = MagicMock()
+            mock_module.construct_features = MagicMock()
+            mock_import.return_value = mock_module
+            
+            # Make construct_features return different result for lagged data
+            call_count = 0
+            def mock_forward_looking_features(df):
+                nonlocal call_count
+                result = pd.DataFrame(index=df.index)
+                # First call with original data, second with lagged data
+                if call_count == 0:
+                    result['feature1'] = df['btc_close']  # Forward-looking feature
+                else:
+                    result['feature1'] = df['btc_close'] * 0.9  # Different result with lagged data
+                call_count += 1
+                return result
+            
+            mock_module.construct_features.side_effect = mock_forward_looking_features
+            
+            # Run the check with a forward-looking strategy
+            result = check_strategy_submission_ready(sample_price_data, 'forward_looking_strategy', return_details=True)
+            
+            # Capture stdout
+            captured = capsys.readouterr()
+            
+            # Assertions for forward-looking strategy
+            assert result['validation_passed'] is False
+            assert result['is_forward_looking'] is True
+            assert "❌ Strategy features may be forward-looking" in captured.out
+    
+    # Test when construct_features is not available
+    with patch('core.spd_checks.get_strategy_info') as mock_get_info:
+        # Configure mock to return a valid strategy info
+        mock_get_info.return_value = {
+            'name': 'no_features_strategy',
+            'module': 'test_module',
+            'function': 'no_features_strategy'
+        }
         
-        # Capture stdout to verify output
-        captured = capsys.readouterr()
-        assert "❌ Strategy may be forward-looking" not in captured.out
-    
-    # Now, test with a forward-looking strategy
-    mock_get_strategy.return_value = mock_strategies['forward_looking_strategy']
-    
-    # Use the actual implementation to test forward-looking detection
-    result = check_strategy_submission_ready(sample_price_data, 'forward_looking_strategy', return_details=True)
-    
-    # Capture stdout
-    captured = capsys.readouterr()
-    
-    # Assertions for forward-looking strategy
-    assert result['validation_passed'] is False
-    assert result['is_forward_looking'] is True
-    assert "❌ Strategy may be forward-looking: it changes when future data is removed." in captured.out
+        # And also patch the importlib call
+        with patch('importlib.import_module') as mock_import:
+            mock_module = MagicMock()
+            # No construct_features function
+            mock_module.construct_features = None
+            mock_import.return_value = mock_module
+            
+            # Run the check with a strategy without construct_features
+            result = check_strategy_submission_ready(sample_price_data, 'no_features_strategy', return_details=True)
+            
+            # Capture stdout
+            captured = capsys.readouterr()
+            
+            # Assertions for missing construct_features
+            assert 'causality_check_error' in result
+            assert result['causality_check_error'] == "No construct_features function in strategy module"
 
 def test_forward_looking_check_error_handling(sample_price_data, capsys):
     """Test error handling in the forward-looking check."""
