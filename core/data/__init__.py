@@ -43,4 +43,4 @@ except ImportError:
 # Define what to export
 __all__ = ['load_data', 'clean_price_data', 'validate_price_data', 'extract_btc_data']
 
-__version__ = "0.1.13"
+__version__ = "0.1.14"
